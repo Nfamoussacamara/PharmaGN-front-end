@@ -1,0 +1,61 @@
+{
+    "compilerOptions": {
+        /* Configuration de base TypeScript pour React + Vite */
+        // Génération du code ES2020 moderne
+        "target": "ES2020",
+        // Utilisation de modules ESNext
+        "lib": [
+            "ES2020",
+            "DOM",
+            "DOM.Iterable"
+        ],
+        // Configuration des modules
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        // Mode strict activé - AUCUN 'any' toléré
+        "strict": true,
+        "noImplicitAny": true,
+        "strictNullChecks": true,
+        "strictFunctionTypes": true,
+        "strictBindCallApply": true,
+        "strictPropertyInitialization": true,
+        "noImplicitThis": true,
+        "alwaysStrict": true,
+        // Vérifications supplémentaires
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        // Configuration JSX pour React
+        "jsx": "react-jsx",
+        // Résolution des chemins
+        "baseUrl": ".",
+        "paths": {
+            "@/*": [
+                "./src/*"
+            ]
+        },
+        // Autres options
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "allowSyntheticDefaultImports": true,
+        "forceConsistentCasingInFileNames": true,
+        // Types Vite pour import.meta
+        "types": [
+            "vite/client"
+        ]
+    },
+    // Fichiers à inclure
+    "include": [
+        "src/**/*.ts",
+        "src/**/*.tsx"
+    ],
+    // Fichiers à exclure
+    "exclude": [
+        "node_modules",
+        "dist",
+        "build"
+    ]
+}
