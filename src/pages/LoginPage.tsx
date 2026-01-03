@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
-import { Button } from '@/components/ui/Button';
-import { Activity, Lock, User as UserIcon, AlertCircle, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import loginImage from '../assets/pharmacist-login-bg.jpg';
 
 /**
- * Page de connexion de l'application PharmaGN.
+ * Page de connexion PharmaGN - Split Layout.
+ * Gauche: Image en plein écran.
+ * Droite: Formulaire compact et centré.
  */
 const LoginPage: React.FC = () => {
     const navigate = useNavigate();
@@ -15,7 +17,6 @@ const LoginPage: React.FC = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
 
-    // Déterminer la redirection après connexion
     const from = (location.state as any)?.from?.pathname || '/';
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -29,98 +30,130 @@ const LoginPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-[80vh] flex items-center justify-center p-4">
-            <div className="w-full max-w-md">
-                {/* En-tête du formulaire */}
-                <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-emerald-50 text-emerald-600 mb-4">
-                        <Activity size={32} />
-                    </div>
-                    <h1 className="text-3xl font-black text-slate-900 mb-2">Bon retour !</h1>
-                    <p className="text-slate-500 font-medium">Connectez-vous à votre compte PharmaGN</p>
-                </div>
+        <div className="flex w-full h-screen overflow-hidden bg-slate-50 font-sans">
+            {/* Partie Gauche : Image (cachée sur mobile) */}
+            <div className="hidden lg:block lg:w-1/2 relative">
+                <img
+                    src={loginImage}
+                    alt="Pharmacist working"
+                    className="absolute inset-0 w-full h-full object-cover"
+                />
+                {/* Overlay optionnel pour assombrir légèrement l'image si nécessaire */}
+                <div className="absolute inset-0 bg-black/10" />
+            </div>
 
-                {/* Formulaire de connexion */}
-                <div className="bg-white p-8 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        {/* Message d'erreur */}
-                        {error && (
-                            <div className="p-4 rounded-xl bg-red-50 border border-red-100 flex items-start gap-3 text-red-600 animate-in fade-in slide-in-from-top-2">
-                                <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
-                                <p className="text-sm font-semibold">{error}</p>
-                            </div>
-                        )}
+            {/* Partie Droite : Formulaire */}
+            <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 relative pb-30">
 
-                        <div className="space-y-4">
-                            {/* Nom d'utilisateur */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-700 ml-1">Utilisateur</label>
-                                <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-emerald-500 transition-colors">
-                                        <UserIcon size={20} />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={username}
-                                        onChange={(e) => setUsername(e.target.value)}
-                                        className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-emerald-500/20 focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none font-medium placeholder:text-slate-400"
-                                        placeholder="votre_nom_utilisateur"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Mot de passe */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-700 ml-1">Mot de passe</label>
-                                <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-emerald-500 transition-colors">
-                                        <Lock size={20} />
-                                    </div>
-                                    <input
-                                        type="password"
-                                        required
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-emerald-500/20 focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none font-medium placeholder:text-slate-400"
-                                        placeholder="••••••••"
-                                    />
-                                </div>
-                            </div>
+                <div className="w-full max-w-[450px] flex flex-col gap-4 pb-35">
+                    {/* Boîte Principale (Transparente) */}
+                    <div className="p-10 flex flex-col items-center rounded-none">
+                        {/* Logo Texte PharmaGN */}
+                        <div className="mb-10 text-center">
+                            <h1 className="text-4xl font-black text-slate-900 tracking-tighter italic select-none">
+                                PharmaGN
+                            </h1>
+                            <div className="h-1 w-10 bg-emerald-600 mx-auto mt-1" />
                         </div>
 
-                        {/* Lien mot de passe oublié */}
-                        <div className="flex justify-end">
-                            <button type="button" className="text-sm font-bold text-emerald-600 hover:text-emerald-700 transition-colors">
-                                Mot de passe oublié ?
-                            </button>
-                        </div>
-
-                        {/* Bouton de validation */}
-                        <Button
-                            type="submit"
-                            className="w-full py-7 text-lg rounded-2xl shadow-lg shadow-emerald-500/20"
-                            disabled={isLoading}
-                        >
-                            {isLoading ? (
-                                <span className="flex items-center gap-2">
-                                    <Loader2 className="h-5 w-5 animate-spin" />
-                                    Connexion...
-                                </span>
-                            ) : (
-                                "Se connecter"
+                        {/* Formulaire */}
+                        <form onSubmit={handleSubmit} className="w-full space-y-4">
+                            {error && (
+                                <div className="p-2 border border-rose-100 bg-rose-50 text-rose-600 text-xs font-bold text-center leading-tight mb-2">
+                                    {error}
+                                </div>
                             )}
-                        </Button>
-                    </form>
+
+                            <div className="space-y-3">
+                                <input
+                                    type="text"
+                                    required
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-emerald-600 outline-none transition-all placeholder:text-slate-500 font-bold text-sm text-slate-950 rounded-none"
+                                    placeholder="Nom d'utilisateur"
+                                />
+
+                                <input
+                                    type="password"
+                                    required
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-emerald-600 outline-none transition-all placeholder:text-slate-500 font-bold text-sm text-slate-950 rounded-none"
+                                    placeholder="Mot de passe"
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={isLoading || !username || !password}
+                                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white font-black text-sm uppercase tracking-widest transition-colors border-none rounded-none mt-4 flex items-center justify-center shadow-none active:scale-[0.98]"
+                            >
+                                {isLoading ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                    "Se connecter"
+                                )}
+                            </button>
+
+                            {/* Séparateur */}
+                            <div className="relative my-6">
+                                <div className="absolute inset-0 flex items-center">
+                                    <span className="w-full border-t border-slate-200" />
+                                </div>
+                                <div className="relative flex justify-center text-xs uppercase">
+                                    <span className="bg-slate-50 px-2 text-slate-400 font-bold tracking-widest">
+                                        OU
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Bouton Google */}
+                            <button
+                                type="button"
+                                className="w-full py-3 bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm border border-slate-200 transition-colors rounded-none flex items-center justify-center gap-2 active:scale-[0.98]"
+                            >
+                                <svg className="h-5 w-5" viewBox="0 0 24 24">
+                                    <path
+                                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                                        fill="#4285F4"
+                                    />
+                                    <path
+                                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                                        fill="#34A853"
+                                    />
+                                    <path
+                                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                                        fill="#FBBC05"
+                                    />
+                                    <path
+                                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                                        fill="#EA4335"
+                                    />
+                                </svg>
+                                Se connecter avec Google
+                            </button>
+
+                            <div className="flex items-center justify-between mt-8 text-sm font-bold uppercase tracking-tight">
+                                <button type="button" className="text-slate-500 hover:text-emerald-600 transition-colors font-bold uppercase">
+                                    Mot de passe oublié ?
+                                </button>
+
+                                <div className="text-slate-500">
+                                    Nouveau ici ?{' '}
+                                    <Link to="/register" className="text-emerald-600 hover:underline transition-colors ml-1">
+                                        S'inscrire
+                                    </Link>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    {/* Boîte secondaire (Inscription) */}
                 </div>
 
-                {/* Lien d'inscription */}
-                <p className="text-center mt-8 text-slate-500 font-medium">
-                    Pas encore de compte ?{' '}
-                    <button className="text-emerald-600 font-bold hover:underline">
-                        Créer un compte
-                    </button>
-                </p>
+                {/* Footer de pied de page universel (positionné en bas de la colonne de droite) */}
+
             </div>
         </div>
     );

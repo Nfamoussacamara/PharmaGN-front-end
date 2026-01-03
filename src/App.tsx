@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Home from '@/pages/Home';
 import SearchPage from '@/pages/SearchPage';
@@ -17,40 +17,40 @@ import { Activity } from 'lucide-react';
 /**
  * Point d'entrée de l'application React.
  */
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
     const { checkAuth } = useAuthStore();
+    const location = useLocation();
 
     // Vérifier l'authentification au chargement
     useEffect(() => {
         checkAuth();
     }, [checkAuth]);
 
+    const isLoginPage = location.pathname === '/login';
+
     return (
-        <BrowserRouter>
-            <div className="min-h-screen flex flex-col bg-slate-50/50 selection:bg-emerald-100 selection:text-emerald-900">
-                {/* Navigation principale */}
-                <Navbar />
+        <div className="min-h-screen flex flex-col bg-slate-50/50 selection:bg-emerald-100 selection:text-emerald-900 font-sans">
+            {/* Navigation principale (masquée sur login) */}
+            {!isLoginPage && <Navbar />}
 
-                {/* Contenu principal */}
-                <main className="flex-1">
-                    <Routes>
-                        <Route path="/" element={<Home />} />
-                        <Route path="/pharmacy/:id" element={<PharmacyDetail />} />
+            {/* Contenu principal */}
+            <main className="flex-1">
+                <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/pharmacy/:id" element={<PharmacyDetail />} />
+                    <Route path="/garde" element={<OnDutyPage />} />
+                    <Route path="/pharmacies" element={<SearchPage />} />
+                    <Route path="/recherche" element={<MedicationSearchPage />} />
+                    <Route path="/commandes" element={<OrdersPage />} />
+                    <Route path="/dashboard" element={<PharmacistDashboard />} />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="*" element={<NotFound />} />
+                </Routes>
+            </main>
 
-                        {/* Placeholder pour les futures routes */}
-                        <Route path="/garde" element={<OnDutyPage />} />
-                        <Route path="/pharmacies" element={<SearchPage />} />
-                        <Route path="/recherche" element={<MedicationSearchPage />} />
-                        <Route path="/commandes" element={<OrdersPage />} />
-                        <Route path="/dashboard" element={<PharmacistDashboard />} />
-                        <Route path="/login" element={<LoginPage />} />
-
-                        <Route path="*" element={<NotFound />} />
-                    </Routes>
-                </main>
-
-                {/* Footer élégant */}
-                <footer className="bg-white border-t border-slate-100 py-12 mt-20">
+            {/* Footer élégant (masqué sur login) */}
+            {!isLoginPage && (
+                <footer className="bg-white border-t border-slate-100 py-12">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                             <div className="flex items-center gap-3">
@@ -69,10 +69,18 @@ const App: React.FC = () => {
                         </div>
                     </div>
                 </footer>
+            )}
 
-                {/* Système de notifications global */}
-                <ToastContainer />
-            </div>
+            {/* Système de notifications global */}
+            <ToastContainer />
+        </div>
+    );
+};
+
+const App: React.FC = () => {
+    return (
+        <BrowserRouter>
+            <AppContent />
         </BrowserRouter>
     );
 };
