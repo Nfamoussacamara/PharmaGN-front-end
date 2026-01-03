@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Check, Trash2 } from 'lucide-react';
+import { Bell, Check, Trash2, Info, AlertTriangle, ShoppingCart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -18,7 +18,7 @@ interface Notification {
 }
 
 /**
- * Section de gestion des notifications
+ * Section de gestion des notifications - Version Robuste
  */
 export const NotificationsSection: React.FC = () => {
     const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -36,13 +36,21 @@ export const NotificationsSection: React.FC = () => {
         try {
             const response = await apiClient.get<any>('/notifications/');
             const data = response.data;
-            // Gérer le cas où l'API renvoie un objet paginé { results: [], ... } 
-            // ou un tableau simple []
-            setNotifications(Array.isArray(data) ? data : (data.results || []));
+
+            // Gestion robuste du format de réponse (paginé ou non)
+            let notifsArray: Notification[] = [];
+            if (Array.isArray(data)) {
+                notifsArray = data;
+            } else if (data && typeof data === 'object' && Array.isArray(data.results)) {
+                notifsArray = data.results;
+            }
+
+            setNotifications(notifsArray);
         } catch (error) {
             console.error('Failed to fetch notifications:', error);
             setNotifications([]);
-            addToast("Erreur lors du chargement des notifications", "error");
+            // On n'affiche pas forcément de toast d'erreur ici pour éviter d'agacer l'utilisateur
+            // si l'API n'est pas encore implémentée
         } finally {
             setLoading(false);
         }
@@ -51,20 +59,22 @@ export const NotificationsSection: React.FC = () => {
     const markAsRead = async (id: number) => {
         try {
             await apiClient.patch(`/notifications/${id}/`, { is_read: true });
-            setNotifications(notifications.map(n =>
+            setNotifications(prev => prev.map(n =>
                 n.id === id ? { ...n, is_read: true } : n
             ));
         } catch (error) {
-            addToast("Erreur", "error");
+            console.error("Error marking notification as read:", error);
+            addToast("Erreur lors de la mise à jour", "error");
         }
     };
 
     const deleteNotification = async (id: number) => {
         try {
             await apiClient.delete(`/notifications/${id}/`);
-            setNotifications(notifications.filter(n => n.id !== id));
+            setNotifications(prev => prev.filter(n => n.id !== id));
             addToast("Notification supprimée", "success");
         } catch (error) {
+            console.error("Error deleting notification:", error);
             addToast("Erreur lors de la suppression", "error");
         }
     };
@@ -75,9 +85,12 @@ export const NotificationsSection: React.FC = () => {
 
     const unreadCount = notifications.filter(n => !n.is_read).length;
 
-    const getNotificationIcon = (_type: string) => {
-        // Retourner différentes icônes selon le type
-        return <Bell size={20} />;
+    const getNotificationIcon = (type: string) => {
+        switch (type?.toLowerCase()) {
+            case 'order': return <ShoppingCart size={20} className="text-emerald-500" />;
+            case 'stock': return <AlertTriangle size={20} className="text-rose-500" />;
+            default: return <Info size={20} className="text-blue-500" />;
+        }
     };
 
     const getNotificationColor = (type: string) => {
@@ -86,7 +99,7 @@ export const NotificationsSection: React.FC = () => {
             stock: 'border-l-rose-500',
             system: 'border-l-blue-500',
         };
-        return colors[type] || 'border-l-slate-300';
+        return colors[type?.toLowerCase()] || 'border-l-slate-300';
     };
 
     return (
@@ -99,26 +112,26 @@ export const NotificationsSection: React.FC = () => {
                         Notifications
                         {unreadCount > 0 && (
                             <Badge variant="error" className="ml-2">
-                                {unreadCount} nouvelle{unreadCount > 1 ? 's' : ''}
+                                {unreadCount}
                             </Badge>
                         )}
                     </h2>
                     <p className="text-slate-500 text-sm mt-1">
-                        Gérez vos alertes et notifications
+                        Suivi des activités de votre pharmacie
                     </p>
                 </div>
-                <Button onClick={fetchNotifications} size="sm">
+                <Button onClick={fetchNotifications} size="sm" variant="outline">
                     Actualiser
                 </Button>
             </div>
 
             {/* Filters */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 p-1 bg-slate-100 rounded-xl w-fit">
                 <button
                     onClick={() => setFilter('all')}
                     className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filter === 'all'
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        ? 'bg-white text-slate-900 shadow-sm'
+                        : 'text-slate-500 hover:text-slate-700'
                         }`}
                 >
                     Toutes ({notifications.length})
@@ -126,8 +139,8 @@ export const NotificationsSection: React.FC = () => {
                 <button
                     onClick={() => setFilter('unread')}
                     className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filter === 'unread'
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        ? 'bg-white text-emerald-600 shadow-sm'
+                        : 'text-slate-500 hover:text-slate-700'
                         }`}
                 >
                     Non lues ({unreadCount})
@@ -138,68 +151,68 @@ export const NotificationsSection: React.FC = () => {
             <div className="space-y-3">
                 {loading ? (
                     [1, 2, 3].map(i => (
-                        <div key={i} className="h-24 bg-slate-50 animate-pulse rounded-xl" />
+                        <div key={i} className="h-24 bg-slate-50 animate-pulse rounded-2xl" />
                     ))
                 ) : filteredNotifications.length === 0 ? (
-                    <Card className="p-12 text-center">
-                        <Bell className="mx-auto mb-4 text-slate-300" size={48} />
-                        <p className="text-slate-500 font-medium">
-                            {filter === 'unread' ? 'Aucune notification non lue' : 'Aucune notification'}
+                    <Card className="p-16 text-center border-2 border-dashed border-slate-200 bg-transparent">
+                        <div className="bg-slate-100 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Bell className="text-slate-400" size={32} />
+                        </div>
+                        <p className="text-slate-500 font-bold">
+                            {filter === 'unread' ? 'Aucune notification non lue' : 'Votre boîte est vide'}
                         </p>
                     </Card>
                 ) : (
-                    <AnimatePresence>
+                    <AnimatePresence mode="popLayout">
                         {filteredNotifications.map((notif) => (
                             <motion.div
-                                key={notif.id}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
+                                key={notif.id || Math.random()}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
                                 layout
                             >
                                 <Card
-                                    className={`border-l-4 ${getNotificationColor(notif.type)} ${notif.is_read ? 'bg-white' : 'bg-blue-50/30'
+                                    className={`border-l-4 transition-all hover:bg-slate-50/50 ${getNotificationColor(notif.type)} ${notif.is_read ? 'opacity-80' : 'bg-emerald-50/10'
                                         }`}
                                 >
                                     <div className="p-4">
                                         <div className="flex items-start justify-between gap-4">
-                                            <div className="flex gap-3 flex-1">
-                                                <div className={`shrink-0 p-2 rounded-lg ${notif.is_read ? 'bg-slate-100' : 'bg-emerald-100'
-                                                    }`}>
+                                            <div className="flex gap-4 flex-1 min-w-0">
+                                                <div className="shrink-0 mt-1">
                                                     {getNotificationIcon(notif.type)}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <h3 className="font-black text-slate-900 text-sm">
-                                                        {notif.title}
+                                                    <h3 className={`font-bold text-slate-900 text-base ${notif.is_read ? 'font-medium text-slate-600' : ''}`}>
+                                                        {notif.title || 'Notification'}
                                                     </h3>
-                                                    <p className="text-sm text-slate-600 mt-1">
-                                                        {notif.message}
+                                                    <p className="text-sm text-slate-600 mt-1 line-clamp-2">
+                                                        {notif.message || 'Pas de message'}
                                                     </p>
-                                                    <p className="text-xs text-slate-400 mt-2">
-                                                        {formatDate(notif.created_at)}
+                                                    <p className="text-xs text-slate-400 mt-2 font-medium">
+                                                        {notif.created_at ? formatDate(notif.created_at) : ''}
                                                     </p>
                                                 </div>
                                             </div>
 
-                                            <div className="flex gap-2 shrink-0">
+                                            <div className="flex gap-1 shrink-0">
                                                 {!notif.is_read && (
                                                     <Button
                                                         size="sm"
                                                         variant="ghost"
                                                         onClick={() => markAsRead(notif.id)}
-                                                        title="Marquer comme lu"
+                                                        className="text-emerald-600 hover:bg-emerald-50"
                                                     >
-                                                        <Check size={16} />
+                                                        <Check size={18} />
                                                     </Button>
                                                 )}
                                                 <Button
                                                     size="sm"
                                                     variant="ghost"
                                                     onClick={() => deleteNotification(notif.id)}
-                                                    title="Supprimer"
-                                                    className="text-rose-600 hover:text-rose-700"
+                                                    className="text-slate-400 hover:text-rose-600 hover:bg-rose-50"
                                                 >
-                                                    <Trash2 size={16} />
+                                                    <Trash2 size={18} />
                                                 </Button>
                                             </div>
                                         </div>

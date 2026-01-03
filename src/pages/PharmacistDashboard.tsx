@@ -35,12 +35,17 @@ const PharmacistDashboard: React.FC = () => {
     const { user } = useAuthStore();
 
     const fetchDashboardData = async () => {
-        if (!user?.pharmacy) return;
+        if (!user?.pharmacy) {
+            console.warn("No pharmacy associated with current user");
+            setLoading(false);
+            return;
+        }
+
         setLoading(true);
         try {
             // 1. Récupérer les commandes en attente via l'endpoint spécialisé
             const ordersResponse = await apiClient.get<Order[]>('/dashboard/orders_pending/');
-            setOrders(ordersResponse.data);
+            setOrders(ordersResponse.data || []);
 
             // 2. Récupérer les statistiques journalières
             const statsResponse = await apiClient.get<any>('/dashboard/stats_daily/');
@@ -48,9 +53,10 @@ const PharmacistDashboard: React.FC = () => {
 
             // 3. Récupérer les stocks bas
             const stocksResponse = await apiClient.get<Stock[]>('/dashboard/stock_low/');
-            setLowStocks(stocksResponse.data);
+            setLowStocks(stocksResponse.data || []);
 
         } catch (error) {
+            console.error("Dashboard data fetch error:", error);
             addToast("Erreur lors du chargement du dashboard", "error");
         } finally {
             setLoading(false);
