@@ -2,11 +2,12 @@ import React from 'react';
 import { cn } from '@/utils/cn';
 
 interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
-    variant?: 'default' | 'success' | 'warning' | 'error' | 'info' | 'outline';
+    variant?: 'default' | 'success' | 'warning' | 'error' | 'info' | 'outline' | 'primary';
 }
 
 /**
  * Composant Badge pour afficher des statuts ou des tags.
+ * Utilise le système de design PharmaGN avec tokens sémantiques de statut.
  */
 export const Badge: React.FC<BadgeProps> = ({
     children,
@@ -15,12 +16,13 @@ export const Badge: React.FC<BadgeProps> = ({
     ...props
 }) => {
     const variants = {
-        default: 'bg-slate-100 text-slate-800',
-        success: 'bg-emerald-100 text-emerald-800',
-        warning: 'bg-amber-100 text-amber-800',
-        error: 'bg-rose-100 text-rose-800',
-        info: 'bg-sky-100 text-sky-800',
-        outline: 'border border-slate-200 text-slate-600',
+        default: 'bg-bg-secondary text-text-body-primary',
+        success: 'bg-bg-status-success text-text-status-success',
+        warning: 'bg-bg-status-warning text-text-status-warning',
+        error: 'bg-bg-status-error text-text-status-error',
+        info: 'bg-bg-status-info text-text-status-info',
+        outline: 'border border-border-default text-text-body-secondary bg-transparent',
+        primary: 'bg-primary-light text-primary-800',
     };
 
     return (

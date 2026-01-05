@@ -27,11 +27,12 @@ const AppContent: React.FC = () => {
     }, [checkAuth]);
 
     const isLoginPage = location.pathname === '/login';
+    const isDashboard = location.pathname === '/dashboard';
 
     return (
         <div className="min-h-screen flex flex-col bg-slate-50/50 selection:bg-emerald-100 selection:text-emerald-900 font-sans">
-            {/* Navigation principale (masquée sur login) */}
-            {!isLoginPage && <Navbar />}
+            {/* Navigation principale (masquée sur login et dashboard) */}
+            {!isLoginPage && !isDashboard && <Navbar />}
 
             {/* Contenu principal */}
             <main className="flex-1">
@@ -48,8 +49,8 @@ const AppContent: React.FC = () => {
                 </Routes>
             </main>
 
-            {/* Footer élégant (masqué sur login) */}
-            {!isLoginPage && (
+            {/* Footer élégant (masqué sur login et dashboard) */}
+            {!isLoginPage && !isDashboard && (
                 <footer className="bg-white border-t border-slate-100 py-12">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
@@ -77,10 +78,14 @@ const AppContent: React.FC = () => {
     );
 };
 
+import { ThemeProvider } from '@/components/ThemeProvider';
+
 const App: React.FC = () => {
     return (
         <BrowserRouter>
-            <AppContent />
+            <ThemeProvider>
+                <AppContent />
+            </ThemeProvider>
         </BrowserRouter>
     );
 };

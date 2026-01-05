@@ -11,6 +11,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 /**
  * Composant Button réutilisable avec états de chargement et icônes.
+ * Utilise le système de design PharmaGN avec tokens sémantiques.
  */
 export const Button: React.FC<ButtonProps> = ({
     children,
@@ -24,11 +25,11 @@ export const Button: React.FC<ButtonProps> = ({
     ...props
 }) => {
     const variants = {
-        primary: 'bg-emerald-600 text-white hover:bg-emerald-700 disabled:bg-emerald-300',
-        secondary: 'bg-slate-800 text-white hover:bg-slate-900 disabled:bg-slate-300',
-        outline: 'border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 disabled:border-emerald-200 disabled:text-emerald-200',
-        ghost: 'text-slate-600 hover:bg-slate-100 disabled:text-slate-300',
-        danger: 'bg-rose-600 text-white hover:bg-rose-700 disabled:bg-rose-300',
+        primary: 'bg-primary text-text-on-primary hover:bg-primary-hover disabled:opacity-50 focus-visible:ring-[var(--focus-ring-success)]',
+        secondary: 'bg-bg-secondary text-text-body-primary hover:bg-bg-active disabled:bg-bg-disabled disabled:text-text-disabled',
+        outline: 'border-2 border-primary text-primary hover:bg-primary-light disabled:border-border-light disabled:text-text-disabled disabled:opacity-50',
+        ghost: 'text-text-body-secondary hover:bg-bg-hover disabled:text-text-disabled disabled:opacity-50',
+        danger: 'bg-accent-600 text-text-on-primary hover:bg-accent-700 disabled:opacity-50 focus-visible:ring-[var(--focus-ring-error)]',
     };
 
     const sizes = {
@@ -40,7 +41,9 @@ export const Button: React.FC<ButtonProps> = ({
     return (
         <button
             className={cn(
-                'flex items-center justify-center rounded-lg font-bold transition-all active:scale-95 disabled:cursor-not-allowed disabled:active:scale-100',
+                'flex items-center justify-center rounded-lg font-bold transition-all duration-[var(--transition-base)]',
+                'active:scale-95 disabled:cursor-not-allowed disabled:active:scale-100',
+                'focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
                 variants[variant],
                 sizes[size],
                 className

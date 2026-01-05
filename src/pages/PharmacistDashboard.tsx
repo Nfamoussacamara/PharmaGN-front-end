@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { LayoutDashboard } from 'lucide-react';
 import { orderService } from '@/services/order.service';
 import apiClient from '@/services/apiClient';
 import type { Order, Stock } from '@/types';
@@ -10,6 +9,7 @@ import { useAuthStore } from '@/store/authStore';
 // Nouveaux composants modulaires
 import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
 import { OrderDetailsModal } from '@/components/dashboard/OrderDetailsModal';
+import { DashboardNavbar } from '@/components/dashboard/DashboardNavbar';
 
 // Sections
 import { OverviewSection } from '@/components/dashboard/sections/OverviewSection';
@@ -65,7 +65,8 @@ const PharmacistDashboard: React.FC = () => {
 
     useEffect(() => {
         fetchDashboardData();
-    }, []);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user]);
 
     const handleValidate = async (orderId: number) => {
         try {
@@ -140,72 +141,42 @@ const PharmacistDashboard: React.FC = () => {
         }
     };
 
-    // Titre de la section
-    const getSectionTitle = () => {
-        const titles: Record<string, string> = {
-            overview: 'Tableau de Bord',
-            orders: 'Commandes',
-            stock: 'Gestion du Stock',
-            pharmacy: 'Ma Pharmacie',
-            analytics: 'Statistiques',
-            notifications: 'Notifications',
-            settings: 'Paramètres',
-        };
-        return titles[activeSection] || 'Tableau de Bord';
-    };
-
     return (
-        <div className="flex h-screen overflow-hidden bg-slate-50">
+        <div className="flex h-screen overflow-hidden bg-bg-app">
             {/* Sidebar */}
             <DashboardSidebar
                 activeSection={activeSection}
                 onSectionChange={setActiveSection}
             />
 
-            {/* Main Content */}
-            <motion.div
-                className="flex-1 overflow-y-auto"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-            >
-                <div className="max-w-7xl mx-auto px-4 md:px-8 py-10">
-                    {/* En-tête du Dashboard */}
-                    <motion.div
-                        className="flex items-center gap-4 mb-10"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.1 }}
-                    >
-                        <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-3 rounded-2xl text-white shadow-xl">
-                            <LayoutDashboard size={32} />
-                        </div>
-                        <div>
-                            <h1 className="text-3xl font-black text-slate-900 leading-tight">
-                                {getSectionTitle()}
-                            </h1>
-                            <p className="text-slate-500 font-medium">
-                                {activeSection === 'overview'
-                                    ? 'Gérez vos stocks et validez les réservations entrantes.'
-                                    : 'Gérez votre activité pharmaceutique'}
-                            </p>
-                        </div>
-                    </motion.div>
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+                {/* Top Navbar */}
+                <DashboardNavbar />
 
-                    {/* Section Content */}
-                    {renderSection()}
+                {/* Scrollable Content */}
+                <motion.div
+                    className="flex-1 overflow-y-auto"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4 }}
+                >
+                    <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
+                        {/* Section Content */}
+                        {renderSection()}
+                    </div>
+                </motion.div>
+            </div>
 
-                    {/* Modal de Détails Commande */}
-                    <OrderDetailsModal
-                        order={selectedOrder}
-                        isOpen={!!selectedOrder}
-                        onClose={() => setSelectedOrder(null)}
-                        onValidate={handleValidate}
-                        onReject={handleReject}
-                        onComplete={handleComplete}
-                    />
-                </div>
-            </motion.div>
+            {/* Modal de Détails Commande */}
+            <OrderDetailsModal
+                order={selectedOrder}
+                isOpen={!!selectedOrder}
+                onClose={() => setSelectedOrder(null)}
+                onValidate={handleValidate}
+                onReject={handleReject}
+                onComplete={handleComplete}
+            />
         </div>
     );
 };

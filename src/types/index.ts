@@ -253,3 +253,19 @@ export const VILLES_GUINEE = [
 ] as const;
 
 export type VilleGuinee = typeof VILLES_GUINEE[number] | string;
+
+/** Filtres pour la recherche de commandes */
+export interface OrderFilters {
+    status?: OrderStatus[];
+    pharmacy_id?: number | string;
+    date_from?: string;
+    date_to?: string;
+    period?: 'today' | 'week' | 'month' | 'last_3_months' | 'custom';
+    price_min?: number;
+    price_max?: number;
+    has_prescription?: boolean;
+    prescription_status?: PrescriptionStatus;
+    search?: string;
+    ordering?: string;
+    page?: number;
+}

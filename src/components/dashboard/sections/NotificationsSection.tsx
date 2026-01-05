@@ -3,10 +3,10 @@ import { Bell, Check, Trash2, Info, AlertTriangle, ShoppingCart } from 'lucide-r
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
 import apiClient from '@/services/apiClient';
 import { useNotificationStore } from '@/store/notificationStore';
 import { formatDate } from '@/utils/format';
+import { cn } from '@/utils/cn';
 
 interface Notification {
     id: number;
@@ -87,51 +87,54 @@ export const NotificationsSection: React.FC = () => {
 
     const getNotificationIcon = (type: string) => {
         switch (type?.toLowerCase()) {
-            case 'order': return <ShoppingCart size={20} className="text-emerald-500" />;
-            case 'stock': return <AlertTriangle size={20} className="text-rose-500" />;
-            default: return <Info size={20} className="text-blue-500" />;
+            case 'order': return <ShoppingCart size={20} className="text-primary" />;
+            case 'stock': return <AlertTriangle size={20} className="text-text-status-error" />;
+            default: return <Info size={20} className="text-text-status-info" />;
         }
     };
 
     const getNotificationColor = (type: string) => {
         const colors: Record<string, string> = {
-            order: 'border-l-emerald-500',
-            stock: 'border-l-rose-500',
-            system: 'border-l-blue-500',
+            order: 'border-l-primary',
+            stock: 'border-l-bg-status-error',
+            system: 'border-l-bg-status-info',
         };
-        return colors[type?.toLowerCase()] || 'border-l-slate-300';
+        return colors[type?.toLowerCase()] || 'border-l-border-default';
     };
 
     return (
         <div className="space-y-6 max-w-4xl">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-2xl font-black text-slate-900 flex items-center gap-2">
-                        <Bell size={28} className="text-emerald-600" />
-                        Notifications
-                        {unreadCount > 0 && (
-                            <Badge variant="error" className="ml-2">
-                                {unreadCount}
-                            </Badge>
-                        )}
-                    </h2>
-                    <p className="text-slate-500 text-sm mt-1">
-                        Suivi des activités de votre pharmacie
+            {/* Action Bar */}
+            <div className="flex items-center justify-between shrink-0 bg-bg-card/30 p-2 border border-border-light/50 backdrop-blur-sm">
+                <div className="px-4">
+                    <p className="text-text-body-secondary text-sm font-bold flex items-center gap-2">
+                        <span className={cn(
+                            "h-2.5 w-2.5 rounded-full",
+                            unreadCount > 0 ? "bg-primary animate-pulse" : "bg-emerald-500"
+                        )} />
+                        {unreadCount > 0
+                            ? `Vous avez ${unreadCount} notification${unreadCount > 1 ? 's' : ''} non lue${unreadCount > 1 ? 's' : ''}`
+                            : "Aucune nouvelle notification"
+                        }
                     </p>
                 </div>
-                <Button onClick={fetchNotifications} size="sm" variant="outline">
+                <Button
+                    onClick={fetchNotifications}
+                    size="sm"
+                    variant="ghost"
+                    className="rounded-xl font-bold hover:bg-bg-hover"
+                >
                     Actualiser
                 </Button>
             </div>
 
             {/* Filters */}
-            <div className="flex gap-2 p-1 bg-slate-100 rounded-xl w-fit">
+            <div className="flex gap-2 p-1 bg-bg-secondary rounded-xl w-fit border border-border-light shadow-inner">
                 <button
                     onClick={() => setFilter('all')}
                     className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filter === 'all'
-                        ? 'bg-white text-slate-900 shadow-sm'
-                        : 'text-slate-500 hover:text-slate-700'
+                        ? 'bg-bg-card text-text-heading-tertiary shadow-sm'
+                        : 'text-text-body-secondary hover:text-text-heading-tertiary'
                         }`}
                 >
                     Toutes ({notifications.length})
@@ -139,8 +142,8 @@ export const NotificationsSection: React.FC = () => {
                 <button
                     onClick={() => setFilter('unread')}
                     className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filter === 'unread'
-                        ? 'bg-white text-emerald-600 shadow-sm'
-                        : 'text-slate-500 hover:text-slate-700'
+                        ? 'bg-bg-card text-primary shadow-sm'
+                        : 'text-text-body-secondary hover:text-text-heading-tertiary'
                         }`}
                 >
                     Non lues ({unreadCount})
@@ -151,14 +154,14 @@ export const NotificationsSection: React.FC = () => {
             <div className="space-y-3">
                 {loading ? (
                     [1, 2, 3].map(i => (
-                        <div key={i} className="h-24 bg-slate-50 animate-pulse rounded-2xl" />
+                        <div key={i} className="h-24 bg-bg-secondary animate-pulse rounded-2xl" />
                     ))
                 ) : filteredNotifications.length === 0 ? (
-                    <Card className="p-16 text-center border-2 border-dashed border-slate-200 bg-transparent">
-                        <div className="bg-slate-100 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Bell className="text-slate-400" size={32} />
+                    <Card className="p-16 text-center border-2 border-dashed border-border-light bg-transparent">
+                        <div className="bg-bg-secondary h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Bell className="text-text-disabled" size={32} />
                         </div>
-                        <p className="text-slate-500 font-bold">
+                        <p className="text-text-body-secondary font-bold">
                             {filter === 'unread' ? 'Aucune notification non lue' : 'Votre boîte est vide'}
                         </p>
                     </Card>
@@ -173,7 +176,7 @@ export const NotificationsSection: React.FC = () => {
                                 layout
                             >
                                 <Card
-                                    className={`border-l-4 transition-all hover:bg-slate-50/50 ${getNotificationColor(notif.type)} ${notif.is_read ? 'opacity-80' : 'bg-emerald-50/10'
+                                    className={`border-l-4 transition-all hover:bg-bg-hover ${getNotificationColor(notif.type)} ${notif.is_read ? 'opacity-80' : 'bg-primary/5'
                                         }`}
                                 >
                                     <div className="p-4">
@@ -183,13 +186,13 @@ export const NotificationsSection: React.FC = () => {
                                                     {getNotificationIcon(notif.type)}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <h3 className={`font-bold text-slate-900 text-base ${notif.is_read ? 'font-medium text-slate-600' : ''}`}>
+                                                    <h3 className={`font-bold text-text-heading-tertiary text-base ${notif.is_read ? 'font-medium text-text-body-secondary' : ''}`}>
                                                         {notif.title || 'Notification'}
                                                     </h3>
-                                                    <p className="text-sm text-slate-600 mt-1 line-clamp-2">
+                                                    <p className="text-sm text-text-body-secondary mt-1 line-clamp-2">
                                                         {notif.message || 'Pas de message'}
                                                     </p>
-                                                    <p className="text-xs text-slate-400 mt-2 font-medium">
+                                                    <p className="text-xs text-text-disabled mt-2 font-medium">
                                                         {notif.created_at ? formatDate(notif.created_at) : ''}
                                                     </p>
                                                 </div>
@@ -201,7 +204,7 @@ export const NotificationsSection: React.FC = () => {
                                                         size="sm"
                                                         variant="ghost"
                                                         onClick={() => markAsRead(notif.id)}
-                                                        className="text-emerald-600 hover:bg-emerald-50"
+                                                        className="text-primary hover:bg-primary-light"
                                                     >
                                                         <Check size={18} />
                                                     </Button>
@@ -210,7 +213,7 @@ export const NotificationsSection: React.FC = () => {
                                                     size="sm"
                                                     variant="ghost"
                                                     onClick={() => deleteNotification(notif.id)}
-                                                    className="text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+                                                    className="text-text-disabled hover:text-text-status-error hover:bg-bg-status-error/10"
                                                 >
                                                     <Trash2 size={18} />
                                                 </Button>

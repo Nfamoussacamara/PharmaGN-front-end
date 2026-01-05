@@ -47,34 +47,37 @@ export const StockManagementSection: React.FC = () => {
     });
 
     const getStockLevel = (quantity: number) => {
-        if (quantity === 0) return { label: 'Rupture', color: 'bg-rose-500', textColor: 'text-rose-600' };
-        if (quantity <= 5) return { label: 'Critique', color: 'bg-rose-400', textColor: 'text-rose-600' };
-        if (quantity <= 10) return { label: 'Faible', color: 'bg-amber-400', textColor: 'text-amber-600' };
-        if (quantity <= 20) return { label: 'Moyen', color: 'bg-blue-400', textColor: 'text-blue-600' };
-        return { label: 'Bon', color: 'bg-emerald-400', textColor: 'text-emerald-600' };
+        if (quantity === 0) return { label: 'Rupture', color: 'bg-bg-status-error', textColor: 'text-text-status-error' };
+        if (quantity <= 5) return { label: 'Critique', color: 'bg-bg-status-error/80', textColor: 'text-text-status-error' };
+        if (quantity <= 10) return { label: 'Faible', color: 'bg-bg-status-warning', textColor: 'text-text-status-warning' };
+        if (quantity <= 20) return { label: 'Moyen', color: 'bg-bg-status-info', textColor: 'text-text-status-info' };
+        return { label: 'Bon', color: 'bg-primary', textColor: 'text-primary-800' };
     };
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-2xl font-black text-slate-900 flex items-center gap-2">
-                        <Package size={28} className="text-emerald-600" />
-                        Gestion du Stock
-                    </h2>
-                    <p className="text-slate-500 text-sm mt-1">
+            {/* Action Bar */}
+            <div className="flex items-center justify-between shrink-0 bg-bg-card/30 p-2 border border-border-light/50 backdrop-blur-sm">
+                <div className="px-4">
+                    <p className="text-text-body-secondary text-sm font-bold flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
                         {filteredStocks.length} médicament{filteredStocks.length > 1 ? 's' : ''} en stock
                     </p>
                 </div>
                 <div className="flex gap-2">
-                    <Button onClick={fetchStocks} variant="outline" size="sm">
+                    <Button
+                        onClick={fetchStocks}
+                        variant="ghost"
+                        size="sm"
+                        className="font-bold hover:bg-bg-hover"
+                    >
                         Actualiser
                     </Button>
                     <Button
                         size="sm"
                         leftIcon={<Plus size={18} />}
                         onClick={() => setIsAddModalOpen(true)}
+                        className="rounded-xl font-bold font-black shadow-lg shadow-primary/20"
                     >
                         Ajouter Stock
                     </Button>
@@ -90,11 +93,11 @@ export const StockManagementSection: React.FC = () => {
             {/* Search */}
             <Card className="p-4">
                 <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
                     <input
                         type="text"
                         placeholder="Rechercher un médicament..."
-                        className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                        className="w-full pl-10 pr-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-bg-app/50"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -104,24 +107,24 @@ export const StockManagementSection: React.FC = () => {
             {/* Statistics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Card className="p-4">
-                    <p className="text-xs font-bold text-slate-400 uppercase mb-1">Total Articles</p>
-                    <p className="text-2xl font-black text-slate-900">{stocks.length}</p>
+                    <p className="text-xs font-bold text-text-disabled uppercase mb-1">Total Articles</p>
+                    <p className="text-2xl font-bold text-text-heading-tertiary">{stocks.length}</p>
                 </Card>
                 <Card className="p-4">
-                    <p className="text-xs font-bold text-slate-400 uppercase mb-1">Rupture</p>
-                    <p className="text-2xl font-black text-rose-600">
+                    <p className="text-xs font-bold text-text-disabled uppercase mb-1">Rupture</p>
+                    <p className="text-2xl font-bold text-text-status-error">
                         {stocks.filter(s => s.quantity === 0).length}
                     </p>
                 </Card>
                 <Card className="p-4">
-                    <p className="text-xs font-bold text-slate-400 uppercase mb-1">Stock Faible</p>
-                    <p className="text-2xl font-black text-amber-600">
+                    <p className="text-xs font-bold text-text-disabled uppercase mb-1">Stock Faible</p>
+                    <p className="text-2xl font-bold text-text-status-warning">
                         {stocks.filter(s => s.quantity > 0 && s.quantity <= 10).length}
                     </p>
                 </Card>
                 <Card className="p-4">
-                    <p className="text-xs font-bold text-slate-400 uppercase mb-1">Valeur Totale</p>
-                    <p className="text-2xl font-black text-emerald-600">
+                    <p className="text-xs font-bold text-text-disabled uppercase mb-1">Valeur Totale</p>
+                    <p className="text-2xl font-bold text-primary">
                         {formatPrice(stocks.reduce((sum, s) => sum + (s.quantity * (s.unit_price || 0)), 0))}
                     </p>
                 </Card>
@@ -131,12 +134,12 @@ export const StockManagementSection: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {loading ? (
                     [1, 2, 3, 4, 5, 6].map(i => (
-                        <div key={i} className="h-40 bg-slate-50 animate-pulse rounded-xl" />
+                        <div key={i} className="h-40 bg-bg-secondary animate-pulse rounded-xl" />
                     ))
                 ) : filteredStocks.length === 0 ? (
                     <Card className="col-span-full p-12 text-center">
-                        <Package className="mx-auto mb-4 text-slate-300" size={48} />
-                        <p className="text-slate-500 font-medium">Aucun médicament trouvé</p>
+                        <Package className="mx-auto mb-4 text-text-disabled" size={48} />
+                        <p className="text-text-body-secondary font-medium">Aucun médicament trouvé</p>
                     </Card>
                 ) : (
                     filteredStocks.map((stock) => {
@@ -153,10 +156,10 @@ export const StockManagementSection: React.FC = () => {
                                     <div className="space-y-3">
                                         <div className="flex items-start justify-between">
                                             <div className="flex-1 min-w-0">
-                                                <h3 className="font-black text-slate-900 text-sm truncate">
+                                                <h3 className="font-bold text-text-heading-tertiary text-sm truncate">
                                                     {stock.medication_detail?.name || 'Médicament'}
                                                 </h3>
-                                                <p className="text-xs text-slate-500 mt-1">
+                                                <p className="text-xs text-text-body-secondary mt-1">
                                                     Prix: {formatPrice(stock.unit_price)}
                                                 </p>
                                             </div>
@@ -167,16 +170,16 @@ export const StockManagementSection: React.FC = () => {
 
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <p className="text-xs text-slate-400 font-medium">Quantité</p>
-                                                <p className="text-2xl font-black text-slate-900">{stock.quantity}</p>
+                                                <p className="text-xs text-text-disabled font-medium">Quantité</p>
+                                                <p className="text-2xl font-bold text-text-heading-tertiary">{stock.quantity}</p>
                                             </div>
-                                            <Badge className={`${stockLevel.textColor}`}>
+                                            <Badge variant={stockLevel.label === 'Rupture' || stockLevel.label === 'Critique' ? 'error' : stockLevel.label === 'Faible' ? 'warning' : stockLevel.label === 'Moyen' ? 'info' : 'primary'}>
                                                 {stockLevel.label}
                                             </Badge>
                                         </div>
 
                                         {/* Progress Bar */}
-                                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                                        <div className="h-2 bg-bg-secondary rounded-full overflow-hidden">
                                             <div
                                                 className={`h-full ${stockLevel.color} transition-all`}
                                                 style={{ width: `${Math.min((stock.quantity / 50) * 100, 100)}%` }}

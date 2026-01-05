@@ -15,6 +15,7 @@ interface ModalProps {
 
 /**
  * Composant Modal animé avec Framer Motion.
+ * Utilise le système de design PharmaGN avec tokens sémantiques.
  */
 export const Modal: React.FC<ModalProps> = ({
     isOpen,
@@ -53,7 +54,7 @@ export const Modal: React.FC<ModalProps> = ({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                        className="absolute inset-0 bg-text-heading-tertiary/40 backdrop-blur-sm"
                     />
 
                     {/* Modal Content */}
@@ -62,17 +63,17 @@ export const Modal: React.FC<ModalProps> = ({
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
                         className={cn(
-                            'relative w-full overflow-hidden rounded-3xl bg-white shadow-2xl',
+                            'relative w-full overflow-hidden rounded-3xl bg-bg-card shadow-xl',
                             sizes[size],
                             className
                         )}
                     >
                         {/* Header */}
-                        <div className="flex items-center justify-between border-b border-slate-100 px-8 py-6">
-                            {title && <h3 className="text-xl font-bold text-slate-800">{title}</h3>}
+                        <div className="flex items-center justify-between border-b border-border-light px-8 py-6">
+                            {title && <h3 className="text-xl font-bold text-text-heading-tertiary">{title}</h3>}
                             <button
                                 onClick={onClose}
-                                className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                                className="rounded-full p-2 text-text-muted hover:bg-bg-hover hover:text-text-body-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
                             >
                                 <X size={20} />
                             </button>

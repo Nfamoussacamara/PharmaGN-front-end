@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Pill, Search, Menu, X, User as UserIcon, LogOut, LayoutDashboard, Clock, Activity, ShoppingBag } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/Button';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import React from 'react';
 
 /**
@@ -52,6 +53,7 @@ const Navbar: React.FC = () => {
                             </Link>
                         ))}
 
+                        <ThemeToggle />
                         <div className="h-6 w-px bg-slate-100 mx-2" />
 
                         {isAuthenticated ? (

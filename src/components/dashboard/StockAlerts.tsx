@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Package, CheckCircle, AlertTriangle } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { cn } from '@/utils/cn';
 import type { Stock } from '@/types';
 
 interface StockAlertsProps {
@@ -14,126 +14,113 @@ interface StockAlertsProps {
  * Composant alertes de stock bas avec niveaux d'urgence visuels
  */
 export const StockAlerts: React.FC<StockAlertsProps> = ({ lowStocks, loading = false }) => {
-    // Détermine le niveau d'urgence en fonction de la quantité
-    const getUrgencyLevel = (quantity: number): 'critical' | 'warning' | 'low' => {
-        if (quantity === 0) return 'critical';
-        if (quantity <= 5) return 'critical';
-        if (quantity <= 10) return 'warning';
-        return 'low';
-    };
-
-    const urgencyStyles = {
-        critical: {
-            border: 'border-rose-200',
-            bg: 'bg-rose-50',
-            buttonBorder: 'border-rose-300',
-            buttonText: 'text-rose-700',
-            buttonHover: 'hover:bg-rose-100',
-            textColor: 'text-rose-600',
-            icon: 'text-rose-500'
-        },
-        warning: {
-            border: 'border-amber-200',
-            bg: 'bg-amber-50/30',
-            buttonBorder: 'border-amber-200',
-            buttonText: 'text-amber-700',
-            buttonHover: 'hover:bg-amber-50',
-            textColor: 'text-amber-600',
-            icon: 'text-amber-500'
-        },
-        low: {
-            border: 'border-orange-200',
-            bg: 'bg-orange-50/20',
-            buttonBorder: 'border-orange-200',
-            buttonText: 'text-orange-600',
-            buttonHover: 'hover:bg-orange-50',
-            textColor: 'text-orange-500',
-            icon: 'text-orange-500'
-        }
+    const getUrgencyStyles = (quantity: number) => {
+        if (quantity === 0) return {
+            bg: "bg-rose-50/50",
+            border: "border-rose-100/50",
+            text: "text-rose-600",
+            badge: "bg-rose-600 text-white",
+            icon: <AlertTriangle size={18} className="text-rose-600" />,
+            label: "RUPTURE TOTALE"
+        };
+        if (quantity <= 5) return {
+            bg: "bg-amber-50/50",
+            border: "border-amber-100/50",
+            text: "text-amber-600",
+            badge: "bg-amber-600 text-white",
+            icon: <Package size={18} className="text-amber-600" />,
+            label: "CRITIQUE"
+        };
+        return {
+            bg: "bg-blue-50/50",
+            border: "border-blue-100/50",
+            text: "text-blue-600",
+            badge: "bg-blue-600 text-white",
+            icon: <Package size={18} className="text-blue-600" />,
+            label: "STOCK FAIBLE"
+        };
     };
 
     return (
         <div className="space-y-6">
-            <h2 className="text-xl font-black text-slate-800 flex items-center gap-2 px-2">
-                <Package size={24} className="text-rose-500" />
-                Alertes Stock
-            </h2>
+            <div className="flex items-center justify-between px-2">
+                <h2 className="text-xl font-black text-slate-800 flex items-center gap-2 tracking-tighter">
+                    <AlertTriangle size={24} className="text-rose-500" />
+                    Alertes Produits
+                </h2>
+                {lowStocks.length > 0 && (
+                    <span className="text-[10px] font-black bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full">
+                        {lowStocks.length} PRIORITÉS
+                    </span>
+                )}
+            </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
                 {loading ? (
                     [1, 2, 3].map(i => (
-                        <div key={i} className="h-20 bg-gradient-to-r from-rose-50 to-rose-100/50 animate-pulse rounded-2xl" />
+                        <div key={i} className="h-24 bg-slate-50 animate-pulse rounded-[32px] border border-slate-100" />
                     ))
                 ) : lowStocks.length === 0 ? (
                     <motion.div
-                        className="bg-gradient-to-br from-emerald-50 to-emerald-100/30 py-10 rounded-3xl text-center border border-emerald-200 shadow-sm"
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ type: "spring", stiffness: 200 }}
+                        className="bg-white p-10 rounded-[40px] text-center border border-slate-100 shadow-sm group hover:shadow-md transition-all duration-500"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
                     >
-                        <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
-                        >
-                            <CheckCircle className="text-emerald-500 mx-auto mb-3" size={32} />
-                        </motion.div>
-                        <p className="text-emerald-700 font-bold text-sm uppercase tracking-widest">
-                            Tout est en règle
-                        </p>
-                        <p className="text-emerald-600 text-xs mt-1">
-                            Aucune alerte de stock
-                        </p>
+                        <div className="h-20 w-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                            <CheckCircle className="text-emerald-500" size={40} />
+                        </div>
+                        <p className="text-slate-800 font-black text-lg tracking-tight">Stock impeccable</p>
+                        <p className="text-slate-400 text-xs font-bold mt-1">Aucune action requise pour le moment.</p>
                     </motion.div>
                 ) : (
                     lowStocks.map((stock, index) => {
-                        const urgency = getUrgencyLevel(stock.quantity);
-                        const styles = urgencyStyles[urgency];
+                        const styles = getUrgencyStyles(stock.quantity);
 
                         return (
                             <motion.div
                                 key={stock.id}
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: index * 0.1 }}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: index * 0.05 }}
                             >
-                                <Card className={`${styles.border} ${styles.bg} border-2 transition-all hover:shadow-md`}>
-                                    <div className="p-4 flex items-center justify-between gap-3">
-                                        {/* Icon d'urgence */}
-                                        <div className="shrink-0">
-                                            {urgency === 'critical' ? (
-                                                <motion.div
-                                                    animate={{ scale: [1, 1.2, 1] }}
-                                                    transition={{ repeat: Infinity, duration: 2 }}
-                                                >
-                                                    <AlertTriangle className={styles.icon} size={24} />
-                                                </motion.div>
-                                            ) : (
-                                                <Package className={styles.icon} size={20} />
-                                            )}
+                                <Card className={cn(
+                                    "border-none shadow-sm hover:shadow-xl transition-all duration-500 rounded-[32px] overflow-hidden group bg-white border border-slate-50",
+                                )}>
+                                    <div className="p-5 flex items-center gap-4 relative">
+                                        {/* Texture d'accentuation sur le côté */}
+                                        <div className={cn("absolute left-0 top-0 bottom-0 w-1", styles.badge.split(' ')[0])} />
+
+                                        <div className={cn(
+                                            "h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:rotate-6",
+                                            styles.bg
+                                        )}>
+                                            {styles.icon}
                                         </div>
 
-                                        {/* Info médicament */}
                                         <div className="flex-1 min-w-0">
-                                            <p className="font-black text-slate-800 text-sm truncate">
-                                                {stock.medication_detail?.name || 'Médicament'}
-                                            </p>
-                                            <p className={`text-[10px] font-bold uppercase tracking-widest ${styles.textColor}`}>
-                                                {urgency === 'critical' && stock.quantity === 0
-                                                    ? 'RUPTURE DE STOCK'
-                                                    : `Qté: ${stock.quantity} unité${stock.quantity > 1 ? 's' : ''}`
-                                                }
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className={cn(
+                                                    "text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest",
+                                                    styles.badge
+                                                )}>
+                                                    {styles.label}
+                                                </span>
+                                                <span className="text-[10px] font-black text-slate-300">#{stock.id}</span>
+                                            </div>
+                                            <h4 className="font-black text-slate-800 text-sm truncate leading-tight">
+                                                {stock.medication_detail?.name || 'Médicament Inconnu'}
+                                            </h4>
+                                            <p className="text-[11px] font-bold text-slate-400 italic">
+                                                Reste {stock.quantity} unité{stock.quantity > 1 ? 's' : ''}
                                             </p>
                                         </div>
 
-                                        {/* Bouton action */}
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className={`h-8 text-[10px] rounded-xl ${styles.buttonBorder} ${styles.buttonText} ${styles.buttonHover} shrink-0 font-bold`}
-                                        >
-                                            Réappro.
-                                        </Button>
+                                        <button className={cn(
+                                            "px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all",
+                                            "bg-slate-900 text-white hover:bg-primary hover:shadow-lg hover:shadow-primary/20"
+                                        )}>
+                                            Commander
+                                        </button>
                                     </div>
                                 </Card>
                             </motion.div>

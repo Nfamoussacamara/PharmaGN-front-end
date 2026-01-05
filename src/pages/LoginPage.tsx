@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import loginImage from '../assets/pharmacist-login-bg.jpg';
 
 /**
@@ -30,7 +30,7 @@ const LoginPage: React.FC = () => {
     };
 
     return (
-        <div className="flex w-full h-screen overflow-hidden bg-slate-50 font-sans">
+        <div className="flex w-full h-screen overflow-hidden bg-bg-app font-sans">
             {/* Partie Gauche : Image (cachée sur mobile) */}
             <div className="hidden lg:block lg:w-1/2 relative">
                 <img
@@ -44,22 +44,30 @@ const LoginPage: React.FC = () => {
 
             {/* Partie Droite : Formulaire */}
             <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 relative pb-30">
+                {/* Lien Retour Accueil */}
+                <Link
+                    to="/"
+                    className="absolute top-8 left-8 text-text-muted hover:text-primary transition-colors flex items-center gap-2 text-[10px] font-black uppercase tracking-widest focus:outline-none focus-visible:underline"
+                >
+                    <ArrowLeft className="h-3 w-3" />
+                    Accueil
+                </Link>
 
                 <div className="w-full max-w-[450px] flex flex-col gap-4 pb-35">
                     {/* Boîte Principale (Transparente) */}
                     <div className="p-10 flex flex-col items-center rounded-none">
                         {/* Logo Texte PharmaGN */}
                         <div className="mb-10 text-center">
-                            <h1 className="text-4xl font-black text-slate-900 tracking-tighter italic select-none">
+                            <h1 className="text-4xl font-black text-text-heading-tertiary tracking-tighter italic select-none">
                                 PharmaGN
                             </h1>
-                            <div className="h-1 w-10 bg-emerald-600 mx-auto mt-1" />
+                            <div className="h-1 w-10 bg-primary mx-auto mt-1" />
                         </div>
 
                         {/* Formulaire */}
                         <form onSubmit={handleSubmit} className="w-full space-y-4">
                             {error && (
-                                <div className="p-2 border border-rose-100 bg-rose-50 text-rose-600 text-xs font-bold text-center leading-tight mb-2">
+                                <div className="p-2 border border-bg-status-error bg-bg-status-error text-text-status-error text-xs font-bold text-center leading-tight mb-2">
                                     {error}
                                 </div>
                             )}
@@ -70,7 +78,7 @@ const LoginPage: React.FC = () => {
                                     required
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-emerald-600 outline-none transition-all placeholder:text-slate-500 font-bold text-sm text-slate-950 rounded-none"
+                                    className="w-full px-4 py-3 bg-bg-secondary border border-border-default focus:bg-bg-card focus:border-primary outline-none transition-all placeholder:text-text-muted font-bold text-sm text-text-body-primary rounded-none focus:ring-2 focus:ring-[var(--focus-ring-success)]"
                                     placeholder="Nom d'utilisateur"
                                 />
 
@@ -79,7 +87,7 @@ const LoginPage: React.FC = () => {
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-emerald-600 outline-none transition-all placeholder:text-slate-500 font-bold text-sm text-slate-950 rounded-none"
+                                    className="w-full px-4 py-3 bg-bg-secondary border border-border-default focus:bg-bg-card focus:border-primary outline-none transition-all placeholder:text-text-muted font-bold text-sm text-text-body-primary rounded-none focus:ring-2 focus:ring-[var(--focus-ring-success)]"
                                     placeholder="Mot de passe"
                                 />
                             </div>
@@ -87,7 +95,7 @@ const LoginPage: React.FC = () => {
                             <button
                                 type="submit"
                                 disabled={isLoading || !username || !password}
-                                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white font-black text-sm uppercase tracking-widest transition-colors border-none rounded-none mt-4 flex items-center justify-center shadow-none active:scale-[0.98]"
+                                className="w-full py-3 bg-primary hover:bg-primary-hover disabled:opacity-50 text-text-on-primary font-black text-sm uppercase tracking-widest transition-colors border-none rounded-none mt-4 flex items-center justify-center shadow-none active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring-success)] focus-visible:ring-offset-2 disabled:cursor-not-allowed"
                             >
                                 {isLoading ? (
                                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -99,10 +107,10 @@ const LoginPage: React.FC = () => {
                             {/* Séparateur */}
                             <div className="relative my-6">
                                 <div className="absolute inset-0 flex items-center">
-                                    <span className="w-full border-t border-slate-200" />
+                                    <span className="w-full border-t border-border-light" />
                                 </div>
                                 <div className="relative flex justify-center text-xs uppercase">
-                                    <span className="bg-slate-50 px-2 text-slate-400 font-bold tracking-widest">
+                                    <span className="bg-bg-app px-2 text-text-muted font-bold tracking-widest">
                                         OU
                                     </span>
                                 </div>
@@ -111,7 +119,7 @@ const LoginPage: React.FC = () => {
                             {/* Bouton Google */}
                             <button
                                 type="button"
-                                className="w-full py-3 bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm border border-slate-200 transition-colors rounded-none flex items-center justify-center gap-2 active:scale-[0.98]"
+                                className="w-full py-3 bg-bg-card hover:bg-bg-hover text-text-body-primary font-bold text-sm border border-border-default transition-colors rounded-none flex items-center justify-center gap-2 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-offset-2"
                             >
                                 <svg className="h-5 w-5" viewBox="0 0 24 24">
                                     <path
@@ -135,13 +143,13 @@ const LoginPage: React.FC = () => {
                             </button>
 
                             <div className="flex items-center justify-between mt-8 text-sm font-bold uppercase tracking-tight">
-                                <button type="button" className="text-slate-500 hover:text-emerald-600 transition-colors font-bold uppercase">
+                                <button type="button" className="text-text-body-secondary hover:text-primary transition-colors font-bold uppercase focus:outline-none focus-visible:underline">
                                     Mot de passe oublié ?
                                 </button>
 
-                                <div className="text-slate-500">
+                                <div className="text-text-body-secondary">
                                     Nouveau ici ?{' '}
-                                    <Link to="/register" className="text-emerald-600 hover:underline transition-colors ml-1">
+                                    <Link to="/register" className="text-primary hover:underline transition-colors ml-1 focus:outline-none focus-visible:underline">
                                         S'inscrire
                                     </Link>
                                 </div>

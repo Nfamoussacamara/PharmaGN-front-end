@@ -1,50 +1,64 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { ClipboardList, Search } from 'lucide-react';
-import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
-import type { Order } from '@/types';
-import { formatDate, formatPrice } from '@/utils/format';
+import React, { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+    Search, RefreshCw, Download,
+    SlidersHorizontal, ArrowUpDown, MoreHorizontal
+} from 'lucide-react';
+import type { Order, OrderFilters as IOrderFilters, OrderStatus } from '@/types';
 import apiClient from '@/services/apiClient';
 import { useNotificationStore } from '@/store/notificationStore';
+import { cn } from '@/utils/cn';
+import { OrdersTable } from '../OrdersTable';
+import { useOrderFilters } from '@/hooks/useOrderFilters';
+import { OrderFiltersPanel } from '../OrderFilters';
+import { FilterBadge } from '../FilterBadge';
+import { AdvancedFilterSidebar } from '../AdvancedFilterSidebar';
 
 interface OrdersSectionProps {
     onOrderClick: (order: Order) => void;
 }
 
-/**
- * Section complète de gestion des commandes
- */
 export const OrdersSection: React.FC<OrdersSectionProps> = ({ onOrderClick }) => {
     const [orders, setOrders] = useState<Order[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState<string>('ALL');
+    const [showSidebarFilters, setShowSidebarFilters] = useState(false);
+    const [showSortMenu, setShowSortMenu] = useState(false);
+    const [showMoreMenu, setShowMoreMenu] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [totalResults, setTotalResults] = useState(0);
+
+    const { filters, setFilters, clearFilters } = useOrderFilters();
     const { addToast } = useNotificationStore();
 
     const statuses = [
-        { value: 'ALL', label: 'Toutes' },
-        { value: 'PENDING', label: 'En attente' },
-        { value: 'VALIDATED', label: 'Validées' },
-        { value: 'READY', label: 'Prêtes' },
-        { value: 'COMPLETED', label: 'Complétées' },
-        { value: 'REJECTED', label: 'Rejetées' },
+        { id: 'all', label: 'Tous', count: totalResults, activeClass: 'text-primary' },
+        { id: 'PENDING', label: 'En attente', activeClass: 'text-amber-600' },
+        { id: 'VALIDATED', label: 'Validées', activeClass: 'text-blue-600' },
+        { id: 'READY', label: 'En livraison', activeClass: 'text-indigo-600' },
+        { id: 'COMPLETED', label: 'Livrées', activeClass: 'text-emerald-600' },
+        { id: 'REJECTED', label: 'Annulées', activeClass: 'text-rose-600' },
     ];
 
-    useEffect(() => {
-        fetchOrders();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const fetchOrders = async () => {
+    const fetchOrders = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await apiClient.get<any>('/orders/');
+            // Transformer les filtres en query params pour l'API
+            const params = new URLSearchParams();
+            if (filters.search) params.append('search', filters.search);
+            if (filters.status) filters.status.forEach(s => params.append('status', s));
+            if (filters.date_from) params.append('date_from', filters.date_from);
+            if (filters.date_to) params.append('date_to', filters.date_to);
+            if (filters.period) params.append('period', filters.period);
+            if (filters.price_min) params.append('price_min', filters.price_min.toString());
+            if (filters.price_max) params.append('price_max', filters.price_max.toString());
+            if (filters.has_prescription !== undefined) params.append('has_prescription', filters.has_prescription.toString());
+            if (filters.ordering) params.append('ordering', filters.ordering);
+            if (filters.page) params.append('page', filters.page.toString());
+
+            const response = await apiClient.get<any>(`/orders/?${params.toString()}`);
             const data = response.data;
-            // Gérer le cas où l'API renvoie un objet paginé { results: [], ... } 
-            // ou un tableau simple []
+
             setOrders(Array.isArray(data) ? data : (data.results || []));
+            setTotalResults(data.count || (Array.isArray(data) ? data.length : 0));
         } catch (error) {
             console.error('Failed to fetch orders:', error);
             setOrders([]);
@@ -52,142 +66,319 @@ export const OrdersSection: React.FC<OrdersSectionProps> = ({ onOrderClick }) =>
         } finally {
             setLoading(false);
         }
+    }, [filters, addToast]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            fetchOrders();
+        }, 300); // Debounce
+        return () => clearTimeout(timer);
+    }, [fetchOrders]);
+
+    const activeFilterCount = Object.entries(filters).filter(([key, value]) => {
+        if (value === undefined || value === null || value === '') return false;
+        if (key === 'status' && Array.isArray(value)) return value.length > 0;
+        if (key === 'page' || key === 'ordering') return false;
+        return true;
+    }).length;
+
+    const handleStatusUpdate = async (orderId: number, newStatus: string) => {
+        try {
+            await apiClient.patch(`/orders/${orderId}/`, { status: newStatus });
+
+            // Mise à jour locale de l'état pour un feedback immédiat
+            setOrders(prev => prev.map(order =>
+                order.id === orderId ? { ...order, status: newStatus as OrderStatus } : order
+            ));
+
+            addToast(`Statut de la commande #${orderId} mis à jour avec succès`, "success");
+        } catch (error) {
+            console.error('Failed to update order status:', error);
+            addToast("Erreur lors de la mise à jour du statut", "error");
+        }
     };
 
-    const filteredOrders = orders.filter(order => {
-        const medName = order.medication_detail?.name || order.medication_name || '';
-        const patName = order.patient_detail?.full_name || order.patient_name || '';
-        const orderId = order.id.toString();
-
-        const matchesSearch =
-            medName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            patName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            orderId.includes(searchTerm);
-
-        const matchesStatus = statusFilter === 'ALL' || order.status === statusFilter;
-
-        return matchesSearch && matchesStatus;
-    });
-
-    const getStatusBadge = (status: string) => {
-        const statusMap: Record<string, { variant: "success" | "error" | "warning" | "default" | "info" | "outline"; label: string }> = {
-            PENDING: { variant: 'warning', label: 'En attente' },
-            VALIDATED: { variant: 'info', label: 'Validée' },
-            READY: { variant: 'default', label: 'Prête' },
-            COMPLETED: { variant: 'success', label: 'Complétée' },
-            REJECTED: { variant: 'error', label: 'Rejetée' },
-        };
-
-        const statusInfo = statusMap[status] || { variant: 'outline' as const, label: status };
-        return <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>;
+    const removeFilter = (key: keyof IOrderFilters, value?: any) => {
+        if (key === 'status' && value) {
+            const newStatuses = filters.status?.filter(s => s !== value) || [];
+            setFilters({ status: newStatuses });
+        } else {
+            setFilters({ [key]: undefined });
+        }
     };
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-2xl font-black text-slate-900 flex items-center gap-2">
-                        <ClipboardList size={28} className="text-emerald-600" />
-                        Gestion des Commandes
-                    </h2>
-                    <p className="text-slate-500 text-sm mt-1">
-                        {filteredOrders.length} commande{filteredOrders.length > 1 ? 's' : ''}
-                    </p>
-                </div>
-                <Button onClick={fetchOrders} size="sm">
-                    Actualiser
-                </Button>
-            </div>
+        <div className="flex gap-6 min-h-[600px] h-full items-start">
+            {/* Advanced Filters Sidebar - Persistent on Desktop */}
+            <AdvancedFilterSidebar
+                isOpen={showSidebarFilters}
+                onToggle={() => setShowSidebarFilters(!showSidebarFilters)}
+                activeFiltersCount={activeFilterCount}
+                onApply={fetchOrders}
+                onReset={clearFilters}
+                title="Filtres Commandes"
+            >
+                <OrderFiltersPanel
+                    filters={filters}
+                    onFilterChange={setFilters}
+                    totalResults={totalResults}
+                />
+            </AdvancedFilterSidebar>
 
-            {/* Filters */}
-            <Card className="p-4">
-                <div className="flex flex-col md:flex-row gap-4">
-                    {/* Search */}
-                    <div className="flex-1 relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <div className="flex-1 flex flex-col space-y-6 relative min-w-0">
+                {/* Top Search Bar & Actions */}
+                <div className="flex flex-col md:flex-row gap-2.5">
+                    <div className="relative group flex-1">
+                        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                            <Search className="text-text-muted group-focus-within:text-primary transition-colors" size={16} />
+                        </div>
                         <input
                             type="text"
-                            placeholder="Rechercher par patient, médicament ou n°..."
-                            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Rechercher un patient, un médicament..."
+                            className="w-full pl-12 pr-4 py-2.5 bg-white border-2 border-border-light rounded-[16px] shadow-sm focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all font-medium text-text-body-primary placeholder:text-text-muted text-xs md:text-sm"
+                            value={filters.search || ''}
+                            onChange={(e) => setFilters({ search: e.target.value })}
                         />
                     </div>
 
-                    {/* Status Filter */}
-                    <div className="flex gap-2 flex-wrap">
-                        {statuses.map(status => (
+                    <div className="flex gap-1.5 bg-slate-50/50 p-1 rounded-[18px] border border-slate-100 relative">
+                        {/* Filtres Toggle */}
+                        <button
+                            onClick={() => setShowSidebarFilters(!showSidebarFilters)}
+                            className={cn(
+                                "w-9 h-9 rounded-[14px] flex items-center justify-center transition-all active:scale-90",
+                                activeFilterCount > 0 || showSidebarFilters
+                                    ? "bg-primary text-white shadow-lg shadow-primary/20"
+                                    : "bg-white border border-slate-200 text-slate-600 hover:border-primary hover:text-primary shadow-sm"
+                            )}
+                            title="Filtres avancés"
+                        >
+                            <SlidersHorizontal size={16} />
+                        </button>
+
+                        {/* Tri */}
+                        <div className="relative">
                             <button
-                                key={status.value}
-                                onClick={() => setStatusFilter(status.value)}
-                                className={`px-3 py-2 rounded-lg text-sm font-bold transition-all ${statusFilter === status.value
-                                    ? 'bg-emerald-600 text-white shadow-lg'
-                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                    }`}
+                                onClick={() => {
+                                    setShowSortMenu(!showSortMenu);
+                                    setShowMoreMenu(false);
+                                }}
+                                className={cn(
+                                    "w-9 h-9 rounded-[14px] bg-white border border-slate-200 text-slate-600 hover:border-primary hover:text-primary transition-all shadow-sm flex items-center justify-center active:scale-90",
+                                    showSortMenu && "border-primary text-primary bg-primary/5"
+                                )}
+                                title="Trier"
                             >
-                                {status.label}
+                                <ArrowUpDown size={16} />
                             </button>
-                        ))}
+
+                            <AnimatePresence>
+                                {showSortMenu && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 z-50"
+                                    >
+                                        {[
+                                            { id: '-created_at', label: 'Plus récent' },
+                                            { id: 'created_at', label: 'Plus ancien' },
+                                            { id: '-total_price', label: 'Prix élevé' },
+                                            { id: 'total_price', label: 'Prix faible' },
+                                        ].map(opt => (
+                                            <button
+                                                key={opt.id}
+                                                onClick={() => {
+                                                    setFilters({ ordering: opt.id });
+                                                    setShowSortMenu(false);
+                                                }}
+                                                className={cn(
+                                                    "w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold transition-colors",
+                                                    filters.ordering === opt.id ? "bg-primary/10 text-primary" : "text-slate-600 hover:bg-slate-50"
+                                                )}
+                                            >
+                                                {opt.label}
+                                            </button>
+                                        ))}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* Plus Actions */}
+                        <div className="relative">
+                            <button
+                                onClick={() => {
+                                    setShowMoreMenu(!showMoreMenu);
+                                    setShowSortMenu(false);
+                                }}
+                                className={cn(
+                                    "w-9 h-9 rounded-[14px] bg-white border border-slate-200 text-slate-600 hover:border-primary hover:text-primary transition-all shadow-sm flex items-center justify-center active:scale-90",
+                                    showMoreMenu && "border-primary text-primary bg-primary/5"
+                                )}
+                                title="Plus d'actions"
+                            >
+                                <MoreHorizontal size={16} />
+                            </button>
+
+                            <AnimatePresence>
+                                {showMoreMenu && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 z-50"
+                                    >
+                                        <button
+                                            onClick={() => {
+                                                fetchOrders();
+                                                setShowMoreMenu(false);
+                                            }}
+                                            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+                                        >
+                                            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+                                            Actualiser
+                                        </button>
+                                        <button
+                                            onClick={() => setShowMoreMenu(false)}
+                                            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors border-t border-slate-50 mt-1"
+                                        >
+                                            <Download size={14} />
+                                            Exporter CSV
+                                        </button>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
                     </div>
                 </div>
-            </Card>
 
-            {/* Orders List */}
-            <div className="space-y-3">
-                {loading ? (
-                    [1, 2, 3, 4, 5].map(i => (
-                        <div key={i} className="h-24 bg-slate-50 animate-pulse rounded-xl" />
-                    ))
-                ) : filteredOrders.length === 0 ? (
-                    <Card className="p-12 text-center">
-                        <ClipboardList className="mx-auto mb-4 text-slate-300" size={48} />
-                        <p className="text-slate-500 font-medium">Aucune commande trouvée</p>
-                    </Card>
-                ) : (
-                    filteredOrders.map((order) => (
-                        <motion.div
-                            key={order.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            whileHover={{ scale: 1.01 }}
-                        >
-                            <Card
-                                className="p-4 cursor-pointer hover:shadow-md transition-shadow"
-                                onClick={() => onOrderClick(order)}
-                            >
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-4 flex-1">
-                                        <div className="h-12 w-12 bg-slate-100 rounded-xl flex items-center justify-center shrink-0">
-                                            <span className="text-xs font-black text-slate-600">
-                                                #{String(order.id).padStart(4, '0')}
+                {/* Quick Status Filters & Total Count Container */}
+                <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center py-1.5 px-1.5 bg-[#f1f3f5] rounded-[22px] border border-slate-200/50 overflow-x-auto no-scrollbar relative">
+                        <div className="flex items-center gap-1 relative z-10">
+                            {statuses.map((s) => {
+                                const isActive = s.id === 'all'
+                                    ? (!filters.status || filters.status.length === 0)
+                                    : filters.status?.includes(s.id as any);
+
+                                return (
+                                    <button
+                                        key={s.id}
+                                        onClick={() => {
+                                            if (s.id === 'all') setFilters({ status: [] });
+                                            else setFilters({ status: [s.id as any] });
+                                        }}
+                                        className={cn(
+                                            "px-6 py-2.5 rounded-[16px] text-[13px] font-bold tracking-tight whitespace-nowrap transition-colors duration-300 flex items-center gap-2.5 shrink-0 active:scale-95 relative",
+                                            isActive
+                                                ? s.activeClass
+                                                : "text-slate-500 hover:text-slate-700"
+                                        )}
+                                    >
+                                        {isActive && (
+                                            <motion.div
+                                                layoutId="activeTab"
+                                                className="absolute inset-0 bg-white rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.08)] -z-10"
+                                                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                            />
+                                        )}
+                                        {s.label}
+                                        {s.id === 'all' && (
+                                            <span className={cn(
+                                                "px-2 py-0.5 rounded-full text-[10px] font-black min-w-[20px] text-center transition-colors duration-300",
+                                                isActive ? "bg-primary/10 text-primary" : "bg-slate-200/50 text-slate-400"
+                                            )}>
+                                                {totalResults}
                                             </span>
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <h3 className="font-black text-slate-900 truncate">
-                                                {order.medication_detail?.name || order.medication_name || 'Médicament'}
-                                            </h3>
-                                            <p className="text-sm text-slate-500">
-                                                Patient: {order.patient_detail?.full_name || order.patient_name || 'Anonyme'} • Qté: {order.quantity || 0}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-4 shrink-0">
-                                        <div className="text-right hidden sm:block">
-                                            <p className="text-xs text-slate-400 font-medium">
-                                                {order.created_at ? formatDate(order.created_at) : ''}
-                                            </p>
-                                            <p className="font-black text-slate-900">
-                                                {order.total_price ? formatPrice(order.total_price) : '0 GNF'}
-                                            </p>
-                                        </div>
-                                        {getStatusBadge(order.status)}
-                                    </div>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Total Found - Transparent and minimalist */}
+                    <div className="hidden lg:flex flex-col items-end px-2 py-1 h-full justify-center">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total trouvé</span>
+                        <span className="text-xl font-bold text-slate-800 tabular-nums tracking-tighter">{totalResults}</span>
+                    </div>
+                </div>
+
+                {/* Main Table Area */}
+                <div className="flex-1 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    {/* Active Filter Chips */}
+                    <AnimatePresence>
+                        {activeFilterCount > 0 && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="flex flex-wrap gap-2 items-center"
+                            >
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">Filtres actifs:</span>
+                                {filters.search && <FilterBadge label="Recherche" value={filters.search} onRemove={() => removeFilter('search')} />}
+                                {filters.status && filters.status.length > 0 && filters.status.map(s => {
+                                    const statusLabel = statuses.find(st => st.id === s)?.label || s;
+                                    return (
+                                        <FilterBadge key={s} label="Statut" value={statusLabel} onRemove={() => removeFilter('status', s)} />
+                                    );
+                                })}
+                                {filters.period && <FilterBadge label="Période" value={filters.period} onRemove={() => removeFilter('period')} />}
+                                {filters.price_min && <FilterBadge label="Prix Min" value={`${filters.price_min} GNF`} onRemove={() => removeFilter('price_min')} />}
+                                {filters.price_max && <FilterBadge label="Prix Max" value={`${filters.price_max} GNF`} onRemove={() => removeFilter('price_max')} />}
+                                {filters.has_prescription !== undefined && (
+                                    <FilterBadge
+                                        label="Ordonnance"
+                                        value={filters.has_prescription ? "Oui" : "Non"}
+                                        onRemove={() => removeFilter('has_prescription')}
+                                    />
+                                )}
+                                <button
+                                    onClick={clearFilters}
+                                    className="text-[10px] font-black text-rose-500 hover:text-rose-600 underline underline-offset-4 px-2"
+                                >
+                                    Tout effacer
+                                </button>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Table Area */}
+                    <div className="relative min-h-[500px]">
+                        {loading ? (
+                            <div className="space-y-4">
+                                {[1, 2, 3, 4, 5].map(i => (
+                                    <div key={i} className="h-20 bg-white animate-pulse rounded-[24px] border border-slate-100" />
+                                ))}
+                            </div>
+                        ) : orders.length === 0 ? (
+                            <div className="bg-white border-2 border-dashed border-slate-100 rounded-[40px] py-40 flex flex-col items-center justify-center text-center">
+                                <div className="h-24 w-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 text-slate-200">
+                                    <Search size={48} />
                                 </div>
-                            </Card>
-                        </motion.div>
-                    ))
-                )}
+                                <h3 className="text-2xl font-black text-text-heading-primary mb-2">Aucune commande</h3>
+                                <p className="text-text-body-secondary max-w-xs font-medium mx-auto px-6">
+                                    Essayez de modifier vos filtres ou effectuez une nouvelle recherche.
+                                </p>
+                                <button
+                                    onClick={clearFilters}
+                                    className="mt-8 px-8 py-3 bg-primary text-white font-black text-sm rounded-2xl shadow-xl shadow-primary/20 hover:scale-105 transition-transform"
+                                >
+                                    Effacer les filtres
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="bg-white rounded-[32px] border border-slate-100 overflow-hidden shadow-sm">
+                                <OrdersTable
+                                    orders={orders}
+                                    onOrderClick={onOrderClick}
+                                    onStatusChange={handleStatusUpdate}
+                                />
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
     );

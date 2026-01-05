@@ -4,30 +4,88 @@ export default {
         "./index.html",
         "./src/**/*.{js,ts,jsx,tsx}",
     ],
+    darkMode: 'class',
     theme: {
         extend: {
             // Palette de couleurs médicale/pharmaceutique
+            // Palette de couleurs médicale/pharmaceutique
             colors: {
-                // Vert médical principal
+                // Sémantique - Texte
+                text: {
+                    heading: {
+                        primary: 'var(--text-heading-primary)',
+                        secondary: 'var(--text-heading-secondary)',
+                        tertiary: 'var(--text-heading-tertiary)',
+                    },
+                    body: {
+                        primary: 'var(--text-body-primary)',
+                        secondary: 'var(--text-body-secondary)',
+                    },
+                    muted: 'var(--text-muted)',
+                    disabled: 'var(--text-disabled)',
+                    link: {
+                        DEFAULT: 'var(--text-link)',
+                        hover: 'var(--text-link-hover)',
+                    },
+                    status: {
+                        success: 'var(--text-success)',
+                        warning: 'var(--text-warning)',
+                        error: 'var(--text-error)',
+                        info: 'var(--text-info)',
+                    },
+                    on: {
+                        primary: 'var(--text-on-primary)',
+                        dark: 'var(--text-on-dark)',
+                    }
+                },
+
+                // Sémantique - Backgrounds
+                bg: {
+                    app: 'var(--bg-app)',
+                    card: 'var(--bg-card)',
+                    elevated: 'var(--bg-elevated)',
+                    secondary: 'var(--bg-secondary)',
+                    accent: 'var(--bg-accent)', // Pharmacie de garde
+
+                    status: {
+                        success: 'var(--bg-success)',
+                        warning: 'var(--bg-warning)',
+                        error: 'var(--bg-error)',
+                        info: 'var(--bg-info)',
+                    },
+
+                    interactive: {
+                        hover: 'var(--bg-hover)',
+                        active: 'var(--bg-active)',
+                        disabled: 'var(--bg-disabled)',
+                    }
+                },
+
+                // Mapping des couleurs existantes pour compatibilité + Override
+                // Vert médical principal (override de la palette statique)
                 primary: {
-                    50: '#f0fdf4',
-                    100: '#dcfce7',
-                    200: '#bbf7d0',
-                    300: '#86efac',
-                    400: '#4ade80',
-                    500: '#22c55e',  // Couleur principale
-                    600: '#16a34a',
-                    700: '#15803d',
-                    800: '#166534',
-                    900: '#14532d',
-                    950: '#052e16',
+                    50: '#ecfdf5',
+                    100: '#d1fae5',
+                    200: '#a7f3d0',
+                    300: '#6ee7b7',
+                    400: '#34d399',
+                    500: 'var(--bg-primary)',  // MAIN PRIMARY COLOR - #047857
+                    600: 'var(--bg-primary-hover)',  // #065F46
+                    700: '#047857',
+                    800: '#065F46',
+                    900: '#064E3B',
+                    950: '#022c22',
+                    // Semantic aliases
+                    DEFAULT: 'var(--bg-primary)',
+                    hover: 'var(--bg-primary-hover)',
+                    light: 'var(--bg-primary-light)',
                 },
 
                 // Bleu secondaire (confiance, santé)
                 secondary: {
                     50: '#eff6ff',
                     100: '#dbeafe',
-                    200: '#bfdbfe',
+                    200: 'var(--bg-info)',
                     300: '#93c5fd',
                     400: '#60a5fa',
                     500: '#3b82f6',
@@ -52,6 +110,13 @@ export default {
                     900: '#7f1d1d',
                     950: '#450a0a',
                 },
+
+                // Bordures sémantiques
+                border: {
+                    light: 'var(--border-light)',
+                    DEFAULT: 'var(--border-default)',
+                    strong: 'var(--border-strong)',
+                }
             },
 
             // Animations personnalisées
@@ -75,8 +140,12 @@ export default {
 
             // Ombres personnalisées
             boxShadow: {
-                'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                'sm': 'var(--shadow-sm)',
+                'card': 'var(--shadow-md)', // Mapped to md
+                'md': 'var(--shadow-md)',
+                'lg': 'var(--shadow-lg)',
+                'xl': 'var(--shadow-xl)',
+                'card-hover': 'var(--shadow-lg)',
             },
 
             // Typographie
