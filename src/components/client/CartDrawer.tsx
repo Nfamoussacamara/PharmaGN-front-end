@@ -21,12 +21,6 @@ export const CartDrawer: React.FC = () => {
         navigate('/panier');
     };
 
-    const calculateItemPrice = (item: typeof items[0]) => {
-        const price = item.discount
-            ? item.price * (1 - item.discount / 100)
-            : item.price;
-        return price * item.quantity;
-    };
 
     return (
         <>

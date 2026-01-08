@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState, useRef } from 'react';
-import { cn } from '@/utils/cn';
 
 interface RangeSliderProps {
     min: number;

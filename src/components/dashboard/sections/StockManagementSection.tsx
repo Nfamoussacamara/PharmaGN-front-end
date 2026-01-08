@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Package, Plus, Pencil, Search, AlertTriangle, CheckCircle, ChevronLeft, ChevronRight, AlertCircle, Loader } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
 import type { Stock } from '@/types';
 import apiClient from '@/services/apiClient';
 import { useNotificationStore } from '@/store/notificationStore';
@@ -41,6 +40,7 @@ export const StockManagementSection: React.FC = () => {
             return () => clearTimeout(timer);
         } else {
             setIsSearching(false);
+            return undefined;
         }
     }, [searchTerm]);
 

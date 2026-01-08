@@ -45,7 +45,8 @@
         // Types Vite pour import.meta
         "types": [
             "vite/client"
-        ]
+        ],
+        "noEmit": true
     },
     // Fichiers à inclure
     "include": [
