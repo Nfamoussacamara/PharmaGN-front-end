@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, Package } from 'lucide-react';
+import { Search, Package, MapPin, X, Store } from 'lucide-react';
 import { ProductCard } from '@/components/client/ProductCard';
 import { Product } from '@/types/client';
 import { searchAndFilter } from '@/services/productService';
+import { useLocationStore } from '@/store/locationStore';
 
 export const CataloguePage: React.FC = () => {
     const navigate = useNavigate();
+    const { selectedPharmacyId, selectedPharmacyName, clearSelection } = useLocationStore();
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -15,12 +17,16 @@ export const CataloguePage: React.FC = () => {
 
     useEffect(() => {
         loadProducts();
-    }, [searchQuery, selectedCategory]);
+    }, [searchQuery, selectedCategory, selectedPharmacyId]);
 
     const loadProducts = async () => {
         setLoading(true);
         try {
-            const results = await searchAndFilter(searchQuery, selectedCategory);
+            const results = await searchAndFilter(
+                searchQuery,
+                selectedCategory,
+                selectedPharmacyId ? String(selectedPharmacyId) : null
+            );
             setProducts(results);
         } catch (error) {
             console.error('Erreur chargement produits:', error);
@@ -96,6 +102,38 @@ export const CataloguePage: React.FC = () => {
                 </div>
             </section>
 
+            {/* Selected Pharmacy Banner */}
+            {selectedPharmacyId && (
+                <div className="bg-emerald-600 border-y border-emerald-500/30">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+                        <div className="flex items-center gap-3 text-white">
+                            <div className="bg-white/20 p-2 rounded-xl">
+                                <Store size={20} className="text-white" />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-100 opacity-80">Votre boutique sélectionnée</p>
+                                <p className="text-sm font-black uppercase">{selectedPharmacyName || 'Pharmacie Sélectionnée'}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <Link
+                                to="/pharmacies"
+                                className="text-[10px] font-black uppercase tracking-widest bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition-colors border border-white/20"
+                            >
+                                Changer
+                            </Link>
+                            <button
+                                onClick={() => clearSelection()}
+                                className="text-white hover:text-emerald-100 transition-colors"
+                                title="Supprimer la sélection"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Catalogue Section */}
             <section id="catalogue" className="py-12 lg:py-20 bg-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -104,20 +142,29 @@ export const CataloguePage: React.FC = () => {
                     <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-12">
                         <div>
                             <div className="flex items-center justify-between w-full mb-1">
-                                <h2 className="text-3xl lg:text-4xl font-bold text-gray-900">
-                                    Featured Products
+                                <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 uppercase tracking-tight">
+                                    {selectedPharmacyId ? "Produits disponibles" : "Tous les produits"}
                                 </h2>
-                                <button className="text-emerald-600 font-bold text-sm hover:underline hidden lg:flex items-center gap-1">
-                                    View All Products →
-                                </button>
                             </div>
                             <p className="text-gray-500 font-medium">
-                                Top choices this week with quick add to cart convenience
+                                {selectedPharmacyId
+                                    ? `Parcourez les produits disponibles chez ${selectedPharmacyName}`
+                                    : "Comparez les offres de toutes nos pharmacies partenaires"
+                                }
                             </p>
                         </div>
 
                         {/* Filters */}
                         <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+                            {!selectedPharmacyId && (
+                                <Link
+                                    to="/pharmacies"
+                                    className="flex items-center gap-2 px-6 py-3 bg-emerald-50 text-emerald-700 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-emerald-100 transition-all"
+                                >
+                                    <MapPin size={16} />
+                                    Trouver une pharmacie
+                                </Link>
+                            )}
                             {/* Search */}
                             <div className="relative flex-1 lg:w-80">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />

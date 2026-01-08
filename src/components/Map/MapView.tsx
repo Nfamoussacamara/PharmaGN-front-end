@@ -1,12 +1,14 @@
 import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from 'react-leaflet';
 import L from 'leaflet';
-import { MapPin, Navigation } from 'lucide-react';
+import { MapPin, Navigation, ShoppingBag } from 'lucide-react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { Pharmacy } from '@/types';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { cn } from '@/utils/cn';
+import { useLocationStore } from '@/store/locationStore';
 
 // Correction pour les icônes par défaut de Leaflet dans Vite
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -19,20 +21,33 @@ L.Icon.Default.mergeOptions({
 /**
  * Icône personnalisée pour les pharmacies utilisant Lucide.
  */
-const createCustomIcon = (isOnDuty: boolean) => {
+const createCustomIcon = (name: string, isOnDuty: boolean) => {
     const color = isOnDuty ? '#fbbf24' : '#10b981'; // Amber-400 vs Emerald-500
     const iconMarkup = renderToStaticMarkup(
-        <div style={{ color, filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' }}>
-            <MapPin size={32} fill={color} fillOpacity={0.2} strokeWidth={2.5} />
+        <div className="relative flex flex-col items-center">
+            {/* Pharmacy Name Label */}
+            <div
+                className="mb-1 px-2 py-0.5 bg-white/90 backdrop-blur-sm rounded-lg border border-slate-200 shadow-xl"
+                style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.2))' }}
+            >
+                <p className="text-[10px] font-black uppercase text-slate-800 whitespace-nowrap tracking-tighter">
+                    {name}
+                </p>
+            </div>
+
+            {/* Marker Pin */}
+            <div style={{ color, filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' }}>
+                <MapPin size={32} fill={color} fillOpacity={0.2} strokeWidth={2.5} />
+            </div>
         </div>
     );
 
     return L.divIcon({
         html: iconMarkup,
         className: 'custom-map-icon',
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
+        iconSize: [120, 60], // Larger size to accommodate label
+        iconAnchor: [60, 60], // Anchor at bottom center of the pin
+        popupAnchor: [0, -60],
     });
 };
 
@@ -74,7 +89,7 @@ const ChangeView = ({ center, zoom }: { center: [number, number]; zoom: number }
 };
 
 /**
- * Composant MapView interactif.
+ * Composant MapView interactif avec support satellite.
  */
 const MapView: React.FC<MapViewProps> = ({
     pharmacies,
@@ -84,9 +99,47 @@ const MapView: React.FC<MapViewProps> = ({
     onPharmacyClick,
     className
 }) => {
+    const navigate = useNavigate();
+    const { setSelectedPharmacy } = useLocationStore();
+    const [mapType, setMapType] = React.useState<'streets' | 'satellite'>('satellite');
+
+    const handleViewCatalogue = (pharmacy: Pharmacy) => {
+        setSelectedPharmacy(pharmacy.id, pharmacy.name);
+        navigate('/catalogue');
+    };
+
     return (
-        <div className={`relative overflow-hidden rounded-3xl shadow-inner bg-slate-100 ${className}`}>
+        <div className={cn("relative overflow-hidden rounded-3xl shadow-inner bg-slate-100", className)}>
+            {/* Layer Toggle */}
+            <div className="absolute top-6 left-6 z-[1000] flex bg-white/90 backdrop-blur-md p-1.5 rounded-2xl shadow-xl border border-slate-100">
+                <button
+                    type="button"
+                    onClick={() => setMapType('streets')}
+                    className={cn(
+                        "px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                        mapType === 'streets'
+                            ? "bg-slate-900 text-white shadow-lg"
+                            : "text-slate-400 hover:text-slate-600"
+                    )}
+                >
+                    Plan
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setMapType('satellite')}
+                    className={cn(
+                        "px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                        mapType === 'satellite'
+                            ? "bg-slate-900 text-white shadow-lg"
+                            : "text-slate-400 hover:text-slate-600"
+                    )}
+                >
+                    Satellite
+                </button>
+            </div>
+
             <MapContainer
+                key={mapType} // Re-render map when type changes for smooth layer switching
                 center={center}
                 zoom={zoom}
                 zoomControl={false}
@@ -94,11 +147,18 @@ const MapView: React.FC<MapViewProps> = ({
             >
                 <ChangeView center={center} zoom={zoom} />
 
-                {/* Couche de tuiles moderne (CartoDB Voyager) */}
-                <TileLayer
-                    url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                />
+                {mapType === 'streets' ? (
+                    <TileLayer
+                        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                    />
+                ) : (
+                    <TileLayer
+                        attribution='&copy; Google Maps'
+                        url="https://mt1.google.com/vt?lyrs=y&x={x}&y={y}&z={z}"
+                        maxZoom={20}
+                    />
+                )}
 
                 <ZoomControl position="bottomright" />
 
@@ -117,7 +177,7 @@ const MapView: React.FC<MapViewProps> = ({
                         <Marker
                             key={pharmacy.id}
                             position={[pharmacy.latitude, pharmacy.longitude]}
-                            icon={createCustomIcon(pharmacy.is_on_duty_now)}
+                            icon={createCustomIcon(pharmacy.name, pharmacy.is_on_duty_now)}
                             eventHandlers={{
                                 click: () => onPharmacyClick?.(pharmacy),
                             }}
@@ -141,11 +201,15 @@ const MapView: React.FC<MapViewProps> = ({
                                             </span>
                                         )}
                                     </div>
-                                    <Link to={`/pharmacy/${pharmacy.id}`} className="mt-2">
-                                        <Button variant="outline" size="sm" className="w-full text-[10px] py-1 h-7">
-                                            Voir Détails
-                                        </Button>
-                                    </Link>
+                                    <Button
+                                        onClick={() => handleViewCatalogue(pharmacy)}
+                                        variant="primary"
+                                        size="sm"
+                                        className="mt-3 w-full text-[10px] py-2 h-9 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700"
+                                    >
+                                        <ShoppingBag size={14} />
+                                        Voir le catalogue
+                                    </Button>
                                 </div>
                             </Popup>
                         </Marker>

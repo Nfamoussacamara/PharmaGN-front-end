@@ -49,10 +49,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     </div>
                 )}
 
-                {/* Badge stock faible */}
-                {product.stock < 10 && product.stock > 0 && (
-                    <div className="absolute top-4 left-4 px-3 py-1 bg-white/90 backdrop-blur-sm text-orange-600 text-[10px] font-bold uppercase rounded-full border border-orange-100">
-                        Stock faible
+                {/* Badge stock status */}
+                {product.stock === 0 ? (
+                    <div className="absolute top-4 left-4 px-3 py-1 bg-rose-500 text-white text-[10px] font-black uppercase rounded-full shadow-lg">
+                        Rupture de stock
+                    </div>
+                ) : product.stock <= 10 ? (
+                    <div className="absolute top-4 left-4 px-3 py-1 bg-amber-500 text-white text-[10px] font-black uppercase rounded-full shadow-lg">
+                        Stock limité
+                    </div>
+                ) : (
+                    <div className="absolute top-4 left-4 px-3 py-1 bg-emerald-500 text-white text-[10px] font-black uppercase rounded-full shadow-lg">
+                        Disponible
                     </div>
                 )}
             </div>
@@ -94,11 +102,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                         onClick={handleAddToCart}
                         disabled={product.stock === 0}
                         className={`flex-1 min-h-[38px] border-2 rounded-full font-bold text-[10px] transition-all flex items-center justify-center px-4 ${product.stock === 0
-                                ? 'border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed'
-                                : 'border-emerald-500 text-emerald-600 hover:bg-emerald-500 hover:text-white'
+                            ? 'border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed'
+                            : 'border-emerald-500 text-emerald-600 hover:bg-emerald-500 hover:text-white'
                             }`}
                     >
-                        {product.stock === 0 ? 'Rupture' : 'Add to Cart'}
+                        {product.stock === 0 ? 'Rupture' : 'Ajouter au panier'}
                     </button>
 
                     <button className="w-9 h-9 border-2 border-gray-100 rounded-full flex items-center justify-center text-gray-400 hover:border-emerald-500 hover:text-emerald-500 hover:bg-emerald-50 transition-all">

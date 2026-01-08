@@ -148,7 +148,8 @@ export const filterByCategory = async (category: string): Promise<Product[]> => 
  */
 export const searchAndFilter = async (
     query: string,
-    category: string
+    category: string,
+    pharmacyId?: string | null
 ): Promise<Product[]> => {
     await new Promise(resolve => setTimeout(resolve, 200));
     let results = MOCK_PRODUCTS;
@@ -163,6 +164,10 @@ export const searchAndFilter = async (
             p.name.toLowerCase().includes(lowerQuery) ||
             p.description?.toLowerCase().includes(lowerQuery)
         );
+    }
+
+    if (pharmacyId) {
+        results = results.filter(p => p.pharmacyId === pharmacyId);
     }
 
     return results;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
 import {
     Package,
     TrendingUp,
@@ -28,9 +28,10 @@ import { obtenirPharmacies } from '@/services/api';
 import SearchBar from '@/components/SearchBar';
 import PharmacyCard from '@/components/PharmacyCard';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { useInView } from 'framer-motion';
-import { useRef } from 'react';
+import { useLocationStore } from '@/store/locationStore';
+import { calculateDistance } from '@/utils/geoUtils';
 
 // Hook pour l'animation de comptage
 const useCountUp = (end: number, duration: number = 2) => {
@@ -182,10 +183,10 @@ const HeroSlide: React.FC<{
                     </div>
 
                     <h1 className="text-5xl lg:text-7xl font-black text-white mb-8 tracking-tight leading-tight">
-                        {slide.title.split('<br />').map((text, i) => (
+                        {slide.title.split('<br />').map((text, i, arr) => (
                             <React.Fragment key={i}>
                                 {text}
-                                {i === 0 && <br />}
+                                {i < arr.length - 1 && <br />}
                             </React.Fragment>
                         ))}
                     </h1>
@@ -216,6 +217,7 @@ const Home: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [searchParams, setSearchParams] = useState<SearchParams>({});
     const [[page, direction], setPage] = useState([0, 0]);
+    const { userCoords } = useLocationStore();
 
     const currentSlide = ((page % HERO_SLIDES.length) + HERO_SLIDES.length) % HERO_SLIDES.length;
 
@@ -260,6 +262,26 @@ const Home: React.FC = () => {
     const handleStatusFilter = useCallback((status: string): void => {
         setSearchParams((prev) => ({ ...prev, is_open: status ? status === 'true' : undefined, page: 1 }));
     }, []);
+
+    const processedPharmacies = useMemo(() => {
+        // Filter: Must be verified AND have GPS coordinates
+        const validPharmacies = pharmacies.filter(p => p.is_verified && p.latitude && p.longitude);
+
+        if (!userCoords) return validPharmacies;
+
+        return validPharmacies.map(p => {
+            const dist = calculateDistance(
+                userCoords.latitude, userCoords.longitude,
+                Number(p.latitude), Number(p.longitude)
+            );
+            return { ...p, distance: dist };
+        }).sort((a, b) => {
+            if (a.distance != null && b.distance != null) return a.distance - b.distance;
+            if (a.distance != null) return -1;
+            if (b.distance != null) return 1;
+            return 0;
+        });
+    }, [pharmacies, userCoords]);
 
     const stats = [
         { icon: Package, value: '500+', label: 'Commandes gérées' },
@@ -468,7 +490,7 @@ const Home: React.FC = () => {
                                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
                             >
                                 <AnimatePresence>
-                                    {pharmacies.map((pharmacy) => (
+                                    {processedPharmacies.map((pharmacy) => (
                                         <motion.div
                                             key={pharmacy.id}
                                             layout

@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import MapView from '@/components/Map/MapView';
 import { cn } from '@/utils/cn';
+import { useLocationStore } from '@/store/locationStore';
+import { calculateDistance, formatDistance } from '@/utils/geoUtils';
 
 /**
  * Page de recherche avancée des pharmacies.
@@ -23,8 +25,38 @@ const SearchPage: React.FC = () => {
         is_open: false,
     });
 
-    const { location, error: geoError, loading: geoLoading } = useGeolocation();
+    const { getCurrentLocation, loading: geoLoading } = useGeolocation();
     const { addToast } = useNotificationStore();
+    const { setUserCoords, setSelectedPharmacy, selectedPharmacyId, userCoords } = useLocationStore();
+
+    // Trigger initial geolocation if not already known
+    useEffect(() => {
+        if (!userCoords) {
+            getCurrentLocation().then(coords => {
+                setUserCoords({ latitude: coords.latitude, longitude: coords.longitude });
+            }).catch(console.error);
+        }
+    }, [userCoords, getCurrentLocation, setUserCoords]);
+
+    const processedPharmacies = React.useMemo(() => {
+        // Filter: Must be verified AND have GPS coordinates
+        const validPharmacies = pharmacies.filter(p => p.is_verified && p.latitude && p.longitude);
+
+        if (!userCoords) return validPharmacies;
+
+        return validPharmacies.map(p => {
+            const dist = calculateDistance(
+                userCoords.latitude, userCoords.longitude,
+                Number(p.latitude), Number(p.longitude)
+            );
+            return { ...p, distance: dist };
+        }).sort((a, b) => {
+            if (a.distance != null && b.distance != null) return a.distance - b.distance;
+            if (a.distance != null) return -1;
+            if (b.distance != null) return 1;
+            return 0;
+        });
+    }, [pharmacies, userCoords]);
 
     const fetchPharmacies = useCallback(async (searchParams: SearchParams) => {
         setLoading(true);
@@ -43,19 +75,17 @@ const SearchPage: React.FC = () => {
     }, [filters, fetchPharmacies]);
 
     const handleNearMe = async () => {
-        if (!location) {
-            addToast(geoError || "Géolocalisation en cours...", "warning");
-            return;
-        }
-
         setLoading(true);
         try {
-            const response = await pharmacyService.getNearby(location[0], location[1]);
+            const coords = await getCurrentLocation();
+            setUserCoords({ latitude: coords.latitude, longitude: coords.longitude });
+
+            const response = await pharmacyService.getNearby(coords.latitude, coords.longitude);
             setPharmacies(response.results);
             setViewMode('map');
             addToast(`${response.results.length} pharmacies trouvées à proximité`, "success");
-        } catch (error) {
-            addToast("Erreur lors de la recherche à proximité", "error");
+        } catch (error: any) {
+            addToast(error || "Erreur lors de la recherche à proximité", "error");
         } finally {
             setLoading(false);
         }
@@ -138,14 +168,24 @@ const SearchPage: React.FC = () => {
                             </div>
                         </div>
 
-                        {pharmacies.map((pharmacy) => (
-                            <Card key={pharmacy.id} className="cursor-pointer group">
+                        {processedPharmacies.map((pharmacy) => (
+                            <Card
+                                key={pharmacy.id}
+                                className={cn(
+                                    "cursor-pointer group transition-all duration-300",
+                                    selectedPharmacyId === pharmacy.id ? "ring-2 ring-emerald-500 shadow-emerald-100" : "hover:shadow-md"
+                                )}
+                                onClick={() => setSelectedPharmacy(pharmacy.id, pharmacy.name)}
+                            >
                                 <CardContent className="p-5">
                                     <div className="flex justify-between items-start mb-3">
                                         <h3 className="font-black text-slate-800 group-hover:text-emerald-600 transition-colors uppercase tracking-tight">
                                             {pharmacy.name}
                                         </h3>
                                         <div className="flex gap-1 flex-shrink-0">
+                                            {selectedPharmacyId === pharmacy.id && (
+                                                <Badge variant="success" className="bg-emerald-500 text-white border-0">SÉLECTIONNÉE</Badge>
+                                            )}
                                             {pharmacy.is_on_duty_now && <Badge variant="warning">GARDE</Badge>}
                                             <Badge variant={pharmacy.is_open_now ? 'success' : 'error'}>
                                                 {pharmacy.is_open_now ? 'OUVERT' : 'FERMÉ'}
@@ -158,9 +198,9 @@ const SearchPage: React.FC = () => {
                                     <div className="flex items-center justify-between mt-auto">
                                         <span className="text-xs font-bold text-slate-400">{pharmacy.phone}</span>
                                         {pharmacy.distance != null && (
-                                            <Badge variant="info">
+                                            <Badge variant="info" className="bg-blue-50 text-blue-700 border-blue-100">
                                                 <Navigation2 size={10} className="mr-1 fill-current" />
-                                                {Number(pharmacy.distance).toFixed(1)} km
+                                                {formatDistance(Number(pharmacy.distance))}
                                             </Badge>
                                         )}
                                     </div>
@@ -182,10 +222,10 @@ const SearchPage: React.FC = () => {
                     viewMode === 'list' && "hidden md:block"
                 )}>
                     <MapView
-                        pharmacies={pharmacies}
+                        pharmacies={processedPharmacies}
                         className="h-full rounded-none"
-                        userLocation={location}
-                        center={location || [9.509, -13.712]}
+                        userLocation={userCoords ? [userCoords.latitude, userCoords.longitude] : undefined}
+                        center={userCoords ? [userCoords.latitude, userCoords.longitude] : [9.509, -13.712]}
                     />
 
                     {/* Bouton Toggle Mobile */}

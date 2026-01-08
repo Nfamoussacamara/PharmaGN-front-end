@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { CreditCard, ShoppingCart } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
@@ -14,6 +14,7 @@ export const CheckoutPage: React.FC = () => {
     const { setCurrentOrder, addToHistory } = useOrderStore();
     const [submitting, setSubmitting] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState<'mobile_money' | 'cash'>('mobile_money');
+    const [deliveryMethod, setDeliveryMethod] = useState<'pickup' | 'delivery'>('pickup');
 
     const { register, handleSubmit, formState: { errors } } = useForm<OrderFormData>({
         defaultValues: {
@@ -139,57 +140,110 @@ export const CheckoutPage: React.FC = () => {
                                 )}
                             </div>
 
-                            {/* Address */}
-                            <div className="mb-8">
-                                <label htmlFor="street" className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">
-                                    Adresse complète
+                            {/* Mode de réception */}
+                            <h2 className="text-2xl font-black text-slate-900 mb-8 tracking-tight">
+                                Mode de réception
+                            </h2>
+
+                            <div className="grid sm:grid-cols-2 gap-4 mb-10">
+                                <label className={`flex flex-col items-center justify-center p-6 border-2 rounded-3xl cursor-pointer transition-all gap-3 ${deliveryMethod === 'pickup' ? 'border-emerald-600 bg-emerald-50' : 'border-slate-100 hover:border-slate-200'}`}>
+                                    <input
+                                        type="radio"
+                                        className="sr-only"
+                                        name="deliveryMethod"
+                                        value="pickup"
+                                        checked={deliveryMethod === 'pickup'}
+                                        onChange={() => setDeliveryMethod('pickup')}
+                                    />
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${deliveryMethod === 'pickup' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                                        🏪
+                                    </div>
+                                    <div className="text-center">
+                                        <p className="font-black text-slate-900 text-sm">Retrait sur place</p>
+                                        <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Gratuit</p>
+                                    </div>
                                 </label>
-                                <input
-                                    type="text"
-                                    id="street"
-                                    {...register('street', { required: "L'adresse est requise" })}
-                                    placeholder="Ex: Rue KA-123, Quartier Kaloum"
-                                    className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-slate-900"
-                                />
-                                {errors.street && (
-                                    <p className="mt-2 text-xs font-bold text-rose-500">{errors.street.message}</p>
+
+                                <label className={`flex flex-col items-center justify-center p-6 border-2 rounded-3xl cursor-pointer transition-all gap-3 ${deliveryMethod === 'delivery' ? 'border-emerald-600 bg-emerald-50' : 'border-slate-100 hover:border-slate-200'}`}>
+                                    <input
+                                        type="radio"
+                                        className="sr-only"
+                                        name="deliveryMethod"
+                                        value="delivery"
+                                        checked={deliveryMethod === 'delivery'}
+                                        onChange={() => setDeliveryMethod('delivery')}
+                                    />
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${deliveryMethod === 'delivery' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                                        🛵
+                                    </div>
+                                    <div className="text-center">
+                                        <p className="font-black text-slate-900 text-sm">Livraison à domicile</p>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Frais applicables</p>
+                                    </div>
+                                </label>
+                            </div>
+
+                            {/* Address - Show only if delivery is selected */}
+                            <AnimatePresence>
+                                {deliveryMethod === 'delivery' && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="overflow-hidden"
+                                    >
+                                        <div className="mb-8">
+                                            <label htmlFor="street" className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">
+                                                Adresse complète de livraison
+                                            </label>
+                                            <input
+                                                type="text"
+                                                id="street"
+                                                {...register('street', { required: deliveryMethod === 'delivery' ? "L'adresse est requise" : false })}
+                                                placeholder="Ex: Rue KA-123, Quartier Kaloum"
+                                                className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-slate-900"
+                                            />
+                                            {errors.street && (
+                                                <p className="mt-2 text-xs font-bold text-rose-500">{errors.street.message}</p>
+                                            )}
+                                        </div>
+
+                                        <div className="grid sm:grid-cols-2 gap-6 mb-8">
+                                            <div>
+                                                <label htmlFor="city" className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">
+                                                    Ville
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    id="city"
+                                                    {...register('city', { required: deliveryMethod === 'delivery' ? 'La ville est requise' : false })}
+                                                    placeholder="Conakry"
+                                                    className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-slate-900"
+                                                />
+                                                {errors.city && (
+                                                    <p className="mt-2 text-xs font-bold text-rose-500">{errors.city.message}</p>
+                                                )}
+                                            </div>
+
+                                            <div>
+                                                <label htmlFor="quarter" className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">
+                                                    Quartier
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    id="quarter"
+                                                    {...register('quarter', { required: deliveryMethod === 'delivery' ? 'Le quartier est requis' : false })}
+                                                    placeholder="Kaloum"
+                                                    className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-slate-900"
+                                                />
+                                                {errors.quarter && (
+                                                    <p className="mt-2 text-xs font-bold text-rose-500">{errors.quarter.message}</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </motion.div>
                                 )}
-                            </div>
-
-                            {/* City & Quarter */}
-                            <div className="grid sm:grid-cols-2 gap-6 mb-8">
-                                <div>
-                                    <label htmlFor="city" className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">
-                                        Ville
-                                    </label>
-                                    <input
-                                        type="text"
-                                        id="city"
-                                        {...register('city', { required: 'La ville est requise' })}
-                                        placeholder="Conakry"
-                                        className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-slate-900"
-                                    />
-                                    {errors.city && (
-                                        <p className="mt-2 text-xs font-bold text-rose-500">{errors.city.message}</p>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <label htmlFor="quarter" className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">
-                                        Quartier
-                                    </label>
-                                    <input
-                                        type="text"
-                                        id="quarter"
-                                        {...register('quarter', { required: 'Le quartier est requis' })}
-                                        placeholder="Kaloum"
-                                        className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-slate-900"
-                                    />
-                                    {errors.quarter && (
-                                        <p className="mt-2 text-xs font-bold text-rose-500">{errors.quarter.message}</p>
-                                    )}
-                                </div>
-                            </div>
+                            </AnimatePresence>
 
                             {/* Instructions */}
                             <div className="mb-10">
