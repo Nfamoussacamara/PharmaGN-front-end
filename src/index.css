@@ -5,6 +5,9 @@
 /* Leaflet CSS */
 @import 'leaflet/dist/leaflet.css';
 
+/* Import Google Font Inter */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
 /* Directives Tailwind CSS */
 @tailwind base;
 @tailwind components;
@@ -13,6 +16,60 @@
 /* Styles de base personnalisés */
 @layer base {
     :root {
+        /* ========================================
+           PHARMAGN CLIENT INTERFACE COLORS
+           ======================================== */
+
+        /* Primaires Client (Alignés sur Pharmacien) */
+        --client-primary-emerald: #047857;
+        --client-primary-emerald-hover: #065F46;
+        --client-primary-emerald-light: #D1FAE5;
+
+        --client-secondary-navy: #1E3A8A;
+        --client-secondary-navy-hover: #1E40AF;
+        --client-secondary-navy-light: #DBEAFE;
+
+        /* Compatibilité variables existantes (Redirection vers Emerald) */
+        --client-primary-blue: var(--client-primary-emerald);
+        --client-primary-blue-hover: var(--client-primary-emerald-hover);
+        --client-primary-blue-light: var(--client-primary-emerald-light);
+
+        --client-secondary-green: var(--client-primary-emerald);
+        --client-secondary-green-hover: var(--client-primary-emerald-hover);
+        --client-secondary-green-light: var(--client-primary-emerald-light);
+
+        /* Statuts Commandes Client */
+        --client-status-pending: #F59E0B;
+        /* Amber/Orange */
+        --client-status-confirmed: #2563EB;
+        /* Blue */
+        --client-status-ready: #8B5CF6;
+        /* Violet */
+        --client-status-delivered: #10B981;
+        /* Emerald/Green */
+        --client-status-cancelled: #EF4444;
+        /* Red */
+
+        /* Neutres Client */
+        --client-text-primary: #1E2937;
+        --client-text-secondary: #4B5563;
+        --client-text-muted: #9CA3AF;
+
+        --client-bg-white: #FFFFFF;
+        --client-bg-gray: #F9FAFB;
+        --client-bg-card: #FFFFFF;
+
+        --client-border: #E5E7EB;
+        --client-border-hover: #D1D5DB;
+
+        /* Gradients Client (Plus institutionnels) */
+        --client-gradient-hero: linear-gradient(135deg, #047857 0%, #1E3A8A 100%);
+        --client-gradient-cta: linear-gradient(135deg, #047857 0%, #065F46 100%);
+
+        /* ========================================
+           EXISTING PHARMACIST INTERFACE COLORS
+           ======================================== */
+
         /* === TITRES === */
         --text-heading-primary: #1E40AF;
         /* Bleu professionnel - H1, titres pages */

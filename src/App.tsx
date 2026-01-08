@@ -9,6 +9,19 @@ import OrdersPage from '@/pages/OrdersPage';
 import PharmacistDashboard from '@/pages/PharmacistDashboard';
 import PharmacyDetail from '@/pages/PharmacyDetail';
 import LoginPage from '@/pages/LoginPage';
+
+// Client Interface Pages
+import { CataloguePage } from '@/pages/client/CataloguePage';
+import { CartPage } from '@/pages/client/CartPage';
+import { CheckoutPage } from '@/pages/client/CheckoutPage';
+import { OrderConfirmationPage } from '@/pages/client/OrderConfirmationPage';
+import { OrderHistoryPage } from '@/pages/client/OrderHistoryPage';
+import { OrderDetailPage } from '@/pages/client/OrderDetailPage';
+
+// Client Components
+import { ClientNavbar } from '@/components/client/ClientNavbar';
+import { CartDrawer } from '@/components/client/CartDrawer';
+
 import { ToastContainer } from '@/components/ui/Toast';
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/store/authStore';
@@ -29,14 +42,25 @@ const AppContent: React.FC = () => {
     const isLoginPage = location.pathname === '/login';
     const isDashboard = location.pathname === '/dashboard';
 
+    // Client routes (new interface)
+    const isClientRoute = location.pathname.startsWith('/catalogue') ||
+        location.pathname.startsWith('/panier') ||
+        location.pathname.startsWith('/commander') ||
+        location.pathname.startsWith('/confirmation') ||
+        location.pathname.startsWith('/historique') ||
+        location.pathname.startsWith('/commande/');
+
     return (
         <div className="min-h-screen flex flex-col bg-slate-50/50 selection:bg-emerald-100 selection:text-emerald-900 font-sans">
-            {/* Navigation principale (masquée sur login et dashboard) */}
-            {!isLoginPage && !isDashboard && <Navbar />}
+            {/* Navigation - Show ClientNavbar for client routes, regular Navbar for pharmacist routes */}
+            {!isLoginPage && !isDashboard && (
+                isClientRoute ? <ClientNavbar /> : <Navbar />
+            )}
 
             {/* Contenu principal */}
             <main className="flex-1">
                 <Routes>
+                    {/* Pharmacist Routes (existing) */}
                     <Route path="/" element={<Home />} />
                     <Route path="/pharmacy/:id" element={<PharmacyDetail />} />
                     <Route path="/garde" element={<OnDutyPage />} />
@@ -45,6 +69,15 @@ const AppContent: React.FC = () => {
                     <Route path="/commandes" element={<OrdersPage />} />
                     <Route path="/dashboard" element={<PharmacistDashboard />} />
                     <Route path="/login" element={<LoginPage />} />
+
+                    {/* Client Routes (new) */}
+                    <Route path="/catalogue" element={<CataloguePage />} />
+                    <Route path="/panier" element={<CartPage />} />
+                    <Route path="/commander" element={<CheckoutPage />} />
+                    <Route path="/confirmation/:orderId" element={<OrderConfirmationPage />} />
+                    <Route path="/historique" element={<OrderHistoryPage />} />
+                    <Route path="/commande/:orderId" element={<OrderDetailPage />} />
+
                     <Route path="*" element={<NotFound />} />
                 </Routes>
             </main>
@@ -71,6 +104,9 @@ const AppContent: React.FC = () => {
                     </div>
                 </footer>
             )}
+
+            {/* Cart Drawer - Only on client routes */}
+            {isClientRoute && <CartDrawer />}
 
             {/* Système de notifications global */}
             <ToastContainer />

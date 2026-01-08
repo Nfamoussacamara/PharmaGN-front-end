@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Check, Trash2, Info, AlertTriangle, ShoppingCart } from 'lucide-react';
+import { Bell, Check, Trash2, Info, AlertTriangle, ShoppingCart, Loader } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -153,9 +153,9 @@ export const NotificationsSection: React.FC = () => {
             {/* Notifications List */}
             <div className="space-y-3">
                 {loading ? (
-                    [1, 2, 3].map(i => (
-                        <div key={i} className="h-24 bg-bg-secondary animate-pulse rounded-2xl" />
-                    ))
+                    <div className="flex items-center justify-center py-20">
+                        <Loader className="h-10 w-10 animate-spin text-primary" />
+                    </div>
                 ) : filteredNotifications.length === 0 ? (
                     <Card className="p-16 text-center border-2 border-dashed border-border-light bg-transparent">
                         <div className="bg-bg-secondary h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4">

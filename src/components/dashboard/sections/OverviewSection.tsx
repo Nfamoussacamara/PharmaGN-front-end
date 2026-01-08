@@ -2,17 +2,13 @@ import React from 'react';
 import type { Order, Stock } from '@/types';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { RecentOrders } from '@/components/dashboard/RecentOrders';
-import { StockAlerts } from '@/components/dashboard/StockAlerts';
-import { Clock, AlertTriangle, TrendingUp, Calendar, Sparkles, Package, Truck, XCircle } from 'lucide-react';
-import { formatPrice } from '@/utils/format';
+import { Clock, AlertTriangle, TrendingUp, Calendar, Sparkles, Package } from 'lucide-react';
+import { formatPrice, formatDate } from '@/utils/format';
 import { StatsChart } from '@/components/dashboard/StatsChart';
-import { TopSellingMedications } from '@/components/dashboard/TopSellingMedications';
-import { CriticalAlerts } from '@/components/dashboard/CriticalAlerts';
-import { StockWidgets } from '@/components/dashboard/StockWidgets';
-import { QuickActionsBar } from '@/components/dashboard/QuickActionsBar';
+
+import { BestSellersChart } from '@/components/dashboard/BestSellersChart';
 import { SystemFooter } from '@/components/dashboard/SystemFooter';
 import { useAuthStore } from '@/store/authStore';
-import { formatDate } from '@/utils/format';
 
 interface OverviewSectionProps {
     orders: Order[];
@@ -31,35 +27,11 @@ export const OverviewSection: React.FC<OverviewSectionProps> = ({
     lowStocks,
     stats,
     loading,
-    onRefresh,
     onOrderClick
 }) => {
     const { user } = useAuthStore();
 
-    // Données fictives pour les alertes stratégiques
-    const strategicAlerts = [
-        {
-            id: '1',
-            type: 'urgent' as const,
-            title: 'Rupture: Amoxicilline 1g',
-            message: 'Produit essentiel en rupture de stock. 12 commandes en attente.',
-            actionLabel: 'Réapprovisionner'
-        },
-        {
-            id: '2',
-            type: 'important' as const,
-            title: 'Expirations (18)',
-            message: '18 produits expirent dans moins de 30 jours. Action requise.',
-            actionLabel: 'Voir la liste'
-        },
-        {
-            id: '3',
-            type: 'info' as const,
-            title: 'Stock optimal atteint',
-            message: 'Le réapprovisionnement de Paracétamol est arrivé.',
-            actionLabel: 'Vérifier'
-        },
-    ];
+
 
     // Données de graphique fictives pour la démo
     const revenueData = [
@@ -72,14 +44,14 @@ export const OverviewSection: React.FC<OverviewSectionProps> = ({
         { label: 'Dim', value: 1950000 },
     ];
 
-    // Préparation des données pour le composant DashboardStats (6 KPI stratégiques)
+    // Préparation des données pour le composant DashboardStats (4 KPI stratégiques)
     const statCards = [
         {
             label: 'Commandes',
             value: stats?.total_orders_today || 0,
-            icon: <Package className="text-primary" size={18} />,
-            bg: 'bg-primary/10',
-            gradient: 'bg-gradient-to-br from-primary/10 to-transparent',
+            icon: <Package className="text-blue-600" size={18} />,
+            bg: 'bg-blue-100/50',
+            gradient: 'bg-gradient-to-br from-blue-500/10 to-transparent',
             trend: { value: '12%', positive: true }
         },
         {
@@ -93,26 +65,10 @@ export const OverviewSection: React.FC<OverviewSectionProps> = ({
         {
             label: 'En attente',
             value: stats?.pending_orders || 0,
-            icon: <Clock className="text-amber-600" size={18} />,
-            bg: 'bg-amber-100/50',
-            gradient: 'bg-gradient-to-br from-amber-500/10 to-transparent',
+            icon: <Clock className="text-violet-600" size={18} />,
+            bg: 'bg-violet-100/50',
+            gradient: 'bg-gradient-to-br from-violet-500/10 to-transparent',
             trend: { value: '2.5min', positive: true }
-        },
-        {
-            label: 'En livraison',
-            value: stats?.in_delivery || 0,
-            icon: <Truck className="text-blue-600" size={18} />,
-            bg: 'bg-blue-100/50',
-            gradient: 'bg-gradient-to-br from-blue-500/10 to-transparent',
-            trend: { value: '2 retards', positive: false }
-        },
-        {
-            label: 'Annulations',
-            value: stats?.cancelled_orders || 0,
-            icon: <XCircle className="text-rose-600" size={18} />,
-            bg: 'bg-rose-100/50',
-            gradient: 'bg-gradient-to-br from-rose-500/10 to-transparent',
-            trend: { value: '1.2%', positive: true }
         },
         {
             label: 'Stock Critique',
@@ -125,7 +81,7 @@ export const OverviewSection: React.FC<OverviewSectionProps> = ({
     ];
 
     return (
-        <div className="space-y-10 pb-10">
+        <div className="space-y-6 pb-6">
             {/* Header de bienvenue */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-2">
                 <div>
@@ -152,45 +108,27 @@ export const OverviewSection: React.FC<OverviewSectionProps> = ({
             {/* Cartes Statistiques */}
             <DashboardStats stats={statCards} loading={loading} />
 
-            {/* Alertes Critiques (Nouveau Bloc Stratégique) */}
-            <CriticalAlerts alerts={strategicAlerts} />
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                {/* Colonne de gauche: Commandes et Graphique */}
-                <div className="lg:col-span-2 space-y-8">
+            <div className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <StatsChart
                         data={revenueData}
                         title="Activité Commerciale"
                         color="#10b981"
                     />
-
-                    <RecentOrders
-                        orders={orders}
-                        loading={loading}
-                        onRefresh={onRefresh}
-                        onOrderClick={onOrderClick}
-                    />
+                    <BestSellersChart loading={loading} />
                 </div>
 
-                {/* Colonne de droite: Alertes Stock et Top Ventes */}
-                <div className="space-y-10">
-                    <TopSellingMedications />
-
-                    <StockWidgets
-                        inventoryValue={45000000}
-                        totalProducts={1247}
-                        expirations={{ urgent: 3, upcoming: 18 }}
-                    />
-
-                    <StockAlerts lowStocks={lowStocks} loading={loading} />
-                </div>
+                <RecentOrders
+                    orders={orders}
+                    loading={loading}
+                    onOrderClick={onOrderClick}
+                />
             </div>
 
             {/* Footer Intelligent */}
             <SystemFooter />
 
-            {/* Barre d'Actions Rapides Flottante */}
-            <QuickActionsBar />
+
         </div>
     );
 };

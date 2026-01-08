@@ -1,65 +1,72 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
-interface GeolocationState {
-    location: [number, number] | null;
-    error: string | null;
-    loading: boolean;
+interface GeolocationPosition {
+    latitude: number;
+    longitude: number;
+    accuracy: number;
 }
 
-/**
- * Hook personnalisé pour récupérer la position de l'utilisateur.
- */
 export const useGeolocation = () => {
-    const [state, setState] = useState<GeolocationState>({
-        location: null,
-        error: null,
-        loading: true,
-    });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (!navigator.geolocation) {
-            setState({
-                location: null,
-                error: "La géolocalisation n'est pas supportée par votre navigateur",
-                loading: false,
-            });
-            return;
-        }
+    const getCurrentLocation = (highAccuracy = true): Promise<GeolocationPosition> => {
+        setLoading(true);
+        setError(null);
 
-        const onSuccess = (position: GeolocationPosition) => {
-            setState({
-                location: [position.coords.latitude, position.coords.longitude],
-                error: null,
-                loading: false,
-            });
-        };
-
-        const onError = (error: GeolocationPositionError) => {
-            let message = "Erreur de géolocalisation";
-            switch (error.code) {
-                case error.PERMISSION_DENIED:
-                    message = "Permission de géolocalisation refusée";
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    message = "Position non disponible";
-                    break;
-                case error.TIMEOUT:
-                    message = "Délai d'attente dépassé";
-                    break;
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                const msg = "La géolocalisation n'est pas supportée par votre navigateur.";
+                setError(msg);
+                setLoading(false);
+                reject(msg);
+                return;
             }
-            setState({
-                location: null,
-                error: message,
-                loading: false,
-            });
-        };
 
-        navigator.geolocation.getCurrentPosition(onSuccess, onError, {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0,
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const coords = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy,
+                    };
+                    setLoading(false);
+                    resolve(coords);
+                },
+                async (err) => {
+                    // If high accuracy failed and we haven't tried low accuracy yet
+                    if (highAccuracy && (err.code === 3 || err.code === 2)) {
+                        console.log("High accuracy failed, retrying with low accuracy...");
+                        try {
+                            const lowAccuracyCoords = await getCurrentLocation(false);
+                            resolve(lowAccuracyCoords);
+                        } catch (fallbackErr) {
+                            reject(fallbackErr);
+                        }
+                        return;
+                    }
+
+                    let msg = "Une erreur est survenue lors de la détection de votre position.";
+                    if (err.code === 1) msg = "Veuillez autoriser l'accès à votre position dans les paramètres de votre navigateur.";
+                    if (err.code === 2) msg = "Position non disponible.";
+                    if (err.code === 3) msg = "Délai d'attente dépassé.";
+
+                    setError(msg);
+                    setLoading(false);
+                    reject(msg);
+                },
+                {
+                    enableHighAccuracy: highAccuracy,
+                    timeout: highAccuracy ? 15000 : 15000, // Try 15s for each
+                    maximumAge: 0,
+                }
+            );
         });
-    }, []);
+    };
 
-    return state;
+    return {
+        getCurrentLocation,
+        loading,
+        error
+    };
 };

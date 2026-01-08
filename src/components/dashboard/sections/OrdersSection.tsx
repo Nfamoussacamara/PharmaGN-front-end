@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Search, RefreshCw, Download,
-    SlidersHorizontal, ArrowUpDown, MoreHorizontal
+    SlidersHorizontal, ArrowUpDown, MoreHorizontal, Loader
 } from 'lucide-react';
 import type { Order, OrderFilters as IOrderFilters, OrderStatus } from '@/types';
 import apiClient from '@/services/apiClient';
@@ -347,10 +347,9 @@ export const OrdersSection: React.FC<OrdersSectionProps> = ({ onOrderClick }) =>
                     {/* Table Area */}
                     <div className="relative min-h-[500px]">
                         {loading ? (
-                            <div className="space-y-4">
-                                {[1, 2, 3, 4, 5].map(i => (
-                                    <div key={i} className="h-20 bg-white animate-pulse rounded-[24px] border border-slate-100" />
-                                ))}
+                            <div className="flex flex-col items-center justify-center py-40">
+                                <Loader className="h-12 w-12 animate-spin text-primary" />
+                                <p className="mt-4 text-text-body-secondary font-bold">Chargement des commandes...</p>
                             </div>
                         ) : orders.length === 0 ? (
                             <div className="bg-white border-2 border-dashed border-slate-100 rounded-[40px] py-40 flex flex-col items-center justify-center text-center">

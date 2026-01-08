@@ -1,0 +1,24 @@
+
+> pharmagn-frontend@1.0.0 type-check
+> tsc --noEmit
+
+src/components/dashboard/EditStockModal.tsx(98,62): error TS2345: Argument of type 'number | ""' is not assignable to parameter of type 'SetStateAction<number>'.
+  Type 'string' is not assignable to type 'SetStateAction<number>'.
+src/components/dashboard/EditStockModal.tsx(111,63): error TS2345: Argument of type 'number | ""' is not assignable to parameter of type 'SetStateAction<number>'.
+  Type 'string' is not assignable to type 'SetStateAction<number>'.
+src/components/dashboard/EditStockModal.tsx(129,59): error TS2345: Argument of type 'number | ""' is not assignable to parameter of type 'SetStateAction<number>'.
+  Type 'string' is not assignable to type 'SetStateAction<number>'.
+src/components/dashboard/sections/StockManagementSection.tsx(6,1): error TS6133: 'Badge' is declared but its value is never read.
+src/components/dashboard/sections/StockManagementSection.tsx(35,15): error TS7030: Not all code paths return a value.
+src/components/ui/RangeSlider.tsx(2,1): error TS6133: 'cn' is declared but its value is never read.
+src/pages/Home.tsx(86,7): error TS6133: 'HeroSlide' is declared but its value is never read.
+src/pages/Home.tsx(95,13): error TS2322: Type '{ enter: (direction: number) => { x: string; opacity: number; scale: number; }; center: { zIndex: number; x: number; opacity: number; scale: number; transition: { x: { type: string; stiffness: number; damping: number; }; opacity: { ...; }; scale: { ...; }; }; }; exit: (direction: number) => { ...; }; }' is not assignable to type 'Variants'.
+  Property 'center' is incompatible with index signature.
+    Type '{ zIndex: number; x: number; opacity: number; scale: number; transition: { x: { type: string; stiffness: number; damping: number; }; opacity: { duration: number; }; scale: { duration: number; }; }; }' is not assignable to type 'Variant'.
+      Type '{ zIndex: number; x: number; opacity: number; scale: number; transition: { x: { type: string; stiffness: number; damping: number; }; opacity: { duration: number; }; scale: { duration: number; }; }; }' is not assignable to type 'TargetAndTransition'.
+        Types of property 'transition' are incompatible.
+          Type '{ x: { type: string; stiffness: number; damping: number; }; opacity: { duration: number; }; scale: { duration: number; }; }' is not assignable to type 'Transition<any> | undefined'.
+            Type '{ x: { type: string; stiffness: number; damping: number; }; opacity: { duration: number; }; scale: { duration: number; }; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+              Type '{ x: { type: string; stiffness: number; damping: number; }; opacity: { duration: number; }; scale: { duration: number; }; }' is not assignable to type 'StyleTransitions'.
+                The types of 'x.type' are incompatible between these types.
+                  Type 'string' is not assignable to type 'AnimationGeneratorType | undefined'.

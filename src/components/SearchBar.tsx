@@ -72,40 +72,37 @@ const SearchBar: React.FC<SearchBarProps> = ({
     };
 
     return (
-        <div className="bg-white rounded-xl shadow-card p-6 mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-transparent p-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Champ de recherche textuelle */}
                 <div className="md:col-span-1">
-                    <label htmlFor="search" className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label htmlFor="search" className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">
                         Rechercher
                     </label>
-                    <div className="relative">
-                        {/* Icon de recherche */}
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search className="h-5 w-5 text-gray-400" />
+                    <div className="relative group">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-emerald-500">
+                            <Search className="h-5 w-5 text-slate-300" />
                         </div>
-
-                        {/* Input de recherche */}
                         <input
                             type="text"
                             id="search"
                             value={queryLocale}
                             onChange={handleSearchChange}
                             placeholder="Nom ou adresse..."
-                            className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                            className="block w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-transparent rounded-[1.5rem] focus:bg-white focus:border-emerald-500/20 focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none font-bold text-slate-700"
                         />
                     </div>
                 </div>
 
                 {/* Filtre par ville */}
                 <div className="md:col-span-1">
-                    <label htmlFor="city" className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label htmlFor="city" className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">
                         Ville
                     </label>
                     <select
                         id="city"
                         onChange={handleCityChange}
-                        className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-white"
+                        className="block w-full px-5 py-4 bg-slate-50 border-2 border-transparent rounded-[1.5rem] focus:bg-white focus:border-emerald-500/20 focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none font-bold text-slate-700 cursor-pointer appearance-none"
                     >
                         <option value="">Toutes les villes</option>
                         {VILLES_GUINEE.map((ville) => (
@@ -118,15 +115,15 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
                 {/* Filtre par statut */}
                 <div className="md:col-span-1">
-                    <label htmlFor="status" className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label htmlFor="status" className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">
                         Statut
                     </label>
                     <select
                         id="status"
                         onChange={handleStatusChange}
-                        className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-white"
+                        className="block w-full px-5 py-4 bg-slate-50 border-2 border-transparent rounded-[1.5rem] focus:bg-white focus:border-emerald-500/20 focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none font-bold text-slate-700 cursor-pointer appearance-none"
                     >
-                        <option value="">Toutes</option>
+                        <option value="">Toutes les pharmacies</option>
                         <option value="true">Ouvertes uniquement</option>
                         <option value="false">Fermées uniquement</option>
                     </select>

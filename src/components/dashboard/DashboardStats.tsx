@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/Card';
 import { cn } from '@/utils/cn';
+import { Loader } from 'lucide-react';
 
 interface StatCardData {
     label: string;
@@ -26,23 +27,12 @@ interface DashboardStatsProps {
 export const DashboardStats: React.FC<DashboardStatsProps> = ({ stats, loading = false }) => {
     if (loading) {
         return (
-            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-10">
-                {[1, 2, 3, 4, 5, 6].map(i => (
-                    <div key={i} className="h-32 bg-gradient-to-br from-slate-50 to-slate-100/50 animate-pulse rounded-[32px] border border-slate-100" />
-                ))}
+            <div className="flex items-center justify-center py-12">
+                <Loader className="h-10 w-10 animate-spin text-primary" />
             </div>
         );
     }
 
-    const container = {
-        hidden: { opacity: 0 },
-        show: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1
-            }
-        }
-    };
 
     const item = {
         hidden: { opacity: 0, y: 20 },
@@ -50,18 +40,13 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ stats, loading =
     };
 
     return (
-        <motion.div
-            className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-10"
-            variants={container}
-            initial="hidden"
-            animate="show"
-        >
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             {stats.map((stat, i) => (
-                <motion.div key={i} variants={item}>
+                <motion.div key={i} variants={item} initial="hidden" animate="show">
                     <Card className="border-none shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden group relative bg-white rounded-[32px] border border-slate-50">
                         {/* Gradient overlay on hover */}
                         <div className={cn(
-                            "absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500",
+                            "absolute inset-0 transition-opacity duration-500",
                             stat.gradient || "bg-gradient-to-br from-primary/5 to-transparent"
                         )} />
 
@@ -102,6 +87,6 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ stats, loading =
                     </Card>
                 </motion.div>
             ))}
-        </motion.div>
+        </div>
     );
 };

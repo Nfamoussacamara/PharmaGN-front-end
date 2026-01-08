@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Edit2, Save } from 'lucide-react';
+import { Edit2, Save, Loader } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import apiClient from '@/services/apiClient';
 import { useNotificationStore } from '@/store/notificationStore';
 import { useAuthStore } from '@/store/authStore';
+import { GeolocationSection } from '@/components/pharmacy/GeolocationSection';
 
 /**
  * Section d'informations et de gestion de la pharmacie
@@ -80,7 +81,7 @@ export const PharmacyInfoSection: React.FC = () => {
     if (loading && !pharmacyData.name) {
         return (
             <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <Loader className="h-8 w-8 animate-spin text-primary" />
             </div>
         );
     }
@@ -303,6 +304,11 @@ export const PharmacyInfoSection: React.FC = () => {
                     </div>
                 </Card>
             </div>
+
+            {/* Geolocation Section */}
+            {pharmacyData.name && (
+                <GeolocationSection pharmacy={pharmacyData} />
+            )}
         </div>
     );
 };

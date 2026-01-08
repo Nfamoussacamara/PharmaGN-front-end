@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { AlertCircle, AlertTriangle, Info, ChevronRight, X } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
@@ -62,57 +61,51 @@ export const CriticalAlerts: React.FC<CriticalAlertsProps> = ({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <AnimatePresence mode="popLayout">
-                    {alerts.map((alert) => {
-                        const styles = getAlertStyles(alert.type);
-                        return (
-                            <motion.div
-                                key={alert.id}
-                                layout
-                                initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.9, x: -20 }}
-                                className={cn(
-                                    "relative p-4 rounded-[24px] border border-transparent transition-all group",
-                                    styles.container
-                                )}
-                            >
-                                <div className="flex gap-3">
-                                    <div className="shrink-0 pt-0.5">
-                                        {styles.icon}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-bold text-sm mb-1 truncate">{alert.title}</h4>
-                                        <p className="text-[11px] font-medium leading-relaxed opacity-80 line-clamp-2">
-                                            {alert.message}
-                                        </p>
+                {alerts.map((alert) => {
+                    const styles = getAlertStyles(alert.type);
+                    return (
+                        <div
+                            key={alert.id}
+                            className={cn(
+                                "relative p-4 rounded-[24px] border border-transparent transition-all group",
+                                styles?.container
+                            )}
+                        >
+                            <div className="flex gap-3">
+                                <div className="shrink-0 pt-0.5">
+                                    {styles?.icon}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <h4 className="font-bold text-sm mb-1 truncate">{alert.title}</h4>
+                                    <p className="text-[11px] font-medium leading-relaxed opacity-80 line-clamp-2">
+                                        {alert.message}
+                                    </p>
 
-                                        {alert.actionLabel && (
-                                            <button
-                                                onClick={() => onAction?.(alert)}
-                                                className={cn(
-                                                    "mt-3 text-[10px] font-black uppercase tracking-widest flex items-center gap-1 py-1.5 px-3 rounded-xl transition-colors",
-                                                    styles.action
-                                                )}
-                                            >
-                                                {alert.actionLabel}
-                                                <ChevronRight size={12} />
-                                            </button>
-                                        )}
-                                    </div>
-                                    {onDismiss && (
+                                    {alert.actionLabel && (
                                         <button
-                                            onClick={() => onDismiss?.(alert.id)}
-                                            className="h-6 w-6 rounded-full flex items-center justify-center hover:bg-black/5 transition-colors shrink-0"
+                                            onClick={() => onAction?.(alert)}
+                                            className={cn(
+                                                "mt-3 text-[10px] font-black uppercase tracking-widest flex items-center gap-1 py-1.5 px-3 rounded-xl transition-colors",
+                                                styles?.action
+                                            )}
                                         >
-                                            <X size={14} className="opacity-40" />
+                                            {alert.actionLabel}
+                                            <ChevronRight size={12} />
                                         </button>
                                     )}
                                 </div>
-                            </motion.div>
-                        );
-                    })}
-                </AnimatePresence>
+                                {onDismiss && (
+                                    <button
+                                        onClick={() => onDismiss?.(alert.id)}
+                                        className="h-6 w-6 rounded-full flex items-center justify-center hover:bg-black/5 transition-colors shrink-0"
+                                    >
+                                        <X size={14} className="opacity-40" />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );

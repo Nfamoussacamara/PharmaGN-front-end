@@ -72,15 +72,6 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             hoverBgClass: 'hover:bg-emerald-50'
         },
         {
-            id: 'pharmacy',
-            label: 'Ma Pharmacie',
-            icon: <Store size={20} />,
-            colorClass: 'text-teal-600',
-            activeBgClass: 'bg-teal-600',
-            activeTextClass: 'text-white',
-            hoverBgClass: 'hover:bg-teal-50'
-        },
-        {
             id: 'analytics',
             label: 'Statistiques',
             icon: <BarChart3 size={20} />,
@@ -88,6 +79,15 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             activeBgClass: 'bg-violet-600',
             activeTextClass: 'text-white',
             hoverBgClass: 'hover:bg-violet-50'
+        },
+        {
+            id: 'pharmacy',
+            label: 'Ma Pharmacie',
+            icon: <Store size={20} />,
+            colorClass: 'text-teal-600',
+            activeBgClass: 'bg-teal-600',
+            activeTextClass: 'text-white',
+            hoverBgClass: 'hover:bg-teal-50'
         },
         {
             id: 'notifications',
