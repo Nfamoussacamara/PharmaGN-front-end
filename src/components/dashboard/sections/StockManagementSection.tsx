@@ -32,16 +32,18 @@ export const StockManagementSection: React.FC = () => {
 
     // Simulation de chargement pour la recherche
     useEffect(() => {
+        let timer: any;
         if (searchTerm) {
             setIsSearching(true);
-            const timer = setTimeout(() => {
+            timer = setTimeout(() => {
                 setIsSearching(false);
             }, 800);
-            return () => clearTimeout(timer);
         } else {
             setIsSearching(false);
-            return undefined;
         }
+        return () => {
+            if (timer) clearTimeout(timer);
+        };
     }, [searchTerm]);
 
     const fetchStocks = async () => {
